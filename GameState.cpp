@@ -19,7 +19,7 @@ std::unique_ptr<Board> GameState::generateMoveBoard()
     uint64_t knightLegal    = generatePieceMoves(KNIGHT);
     uint64_t pawnLegal      = generatePieceMoves(PAWN);
 
-    switch () {
+    switch (m_playerToMove) {
         case WHITE:
                return std::make_unique<Board>(pawnLegal,knightLegal,bishopLegal,rookLeagal,queenLegal,kingLegal,NO_MOVE,NO_MOVE,NO_MOVE,NO_MOVE,NO_MOVE,NO_MOVE);
             break;
@@ -63,8 +63,8 @@ uint64_t GameState::generateKingMoves ()
     uint64_t kingClipFileA = king & CLEAR_FILE_MASK(FILE_A);
     uint64_t kingClipFileH = king & CLEAR_FILE_MASK(FILE_H);
     uint64_t king_moves = (
-            (kingClipFileA << 7) | (king << 8) | (kingClipFileH << 9) | (kingClipFileA >> 1) |
-            (kingClipFileH << 1) | (kingClipFileA >> 9) | (king >> 8) | (kingClipFileH >> 7)
+            (kingClipFileA << 7) | (king << 8)          | (kingClipFileH << 9) | (kingClipFileA >> 1) |
+            (kingClipFileH << 1) | (kingClipFileA >> 9) | (king >> 8)          | (kingClipFileH >> 7)
         );
     uint64_t king_moves_legal = king_moves & ~m_board->getPiecesByColor(m_playerToMove);
     return king_moves_legal;
