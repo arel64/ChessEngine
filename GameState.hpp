@@ -4,40 +4,57 @@
 #include <cstdint>
 #include <stdint.h>
 #include <memory>
+#include <vector> 
+    
     class GameState
     {
       public:
-        std::unique_ptr<Board>  generateMoveBoard();
-        uint64_t generatePieceMoves(PieceType piece);
-        GameState(Board*,uint8_t castleInfo,Color playerToMove,uint16_t enPassantSquare);
-        GameState(GameState const *gameState) : GameState(gameState->m_board.get(), gameState->m_castleInfo, gameState->m_playerToMove, gameState->m_enPassantSquare) {}
-        GameState();        
+        std::shared_ptr<GameState> playPly(uint8_t sourceSquare,uint8_t targetSquare);
+        
+        std::shared_ptr<std::vector<moveInfo>> generatePieceMoves(PieceType piece);
+        uint64_t getPositiveRayAttack(uint8_t square,Directions direction);
+        uint64_t getNegativeRayAttack(uint8_t square,Directions direction);
+        auto getMoveInfoVec(){return m_moveInfoVec;};
+        GameState(std::shared_ptr<Board>,uint8_t castleInfo,Color playerToMove,uint16_t enPassantSquare);
+        GameState(GameState const *gameState) : GameState(gameState->m_board, gameState->m_castleInfo, gameState->m_playerToMove, gameState->m_enPassantSquare) {}
+        GameState() : GameState(std::make_shared<Board>(new Board()),0,WHITE,0) {};        
         ~GameState();
+      public:
+        inline static uint64_t RAY_ATTACKS[64][8];
+
       private:
 
-        std::unique_ptr<Board> m_board;
+        std::shared_ptr<Board> m_board;
+        std::shared_ptr<std::vector<moveInfo>> m_moveInfoVec;
         /*
         # 8 bit integer to store castle information that cannot be infered from the board
         # 0-3: (white) king moved, left rook moved, right rook moved, free bit
         # 4-7: (black) king moved, left rook moved, right rook moved, free bit
         */
         uint8_t m_castleInfo;
-        /*
-            White is 1 and black is 0
-        */
+
+
         Color m_playerToMove;
         
         /*
             TODO:: To be implemented
         */
         uint16_t m_enPassantSquare;
-    
+
+        inline static bool isRayAttacksInitialized;
+
       private:
-        uint64_t generateKingMoves();
-        uint64_t generateQueenMoves();
-        uint64_t generateRookMoves();
-        uint64_t generateBishopMoves();
-        uint64_t generateKnightMoves();
-        uint64_t generatePawnMoves();
+        std::shared_ptr<std::vector<moveInfo>> generateMoveInfoVec();
+        std::shared_ptr<std::vector<moveInfo>> generateSlidingMoves(PieceType);
+        std::shared_ptr<std::vector<moveInfo>> generateNonSlidingMoves(PieceType);
+        std::shared_ptr<std::vector<moveInfo>> generateKingMoves();
+        std::shared_ptr<std::vector<moveInfo>> generateQueenMoves();
+        std::shared_ptr<std::vector<moveInfo>> generateRookMoves();
+        std::shared_ptr<std::vector<moveInfo>> generateBishopMoves();
+        std::shared_ptr<std::vector<moveInfo>> generateKnightMoves();
+        std::shared_ptr<std::vector<moveInfo>> generatePawnMoves();
+        uint64_t initRayAttacksForSquare(uint8_t square,int direction);
+        uint64_t getRayAttack(bool positive,uint8_t square,Directions direction);
+        void     initRayAttacks();
     };
 #endif

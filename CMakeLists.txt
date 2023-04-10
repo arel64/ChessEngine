@@ -4,6 +4,6 @@ project(
     VERSION 0.01
     LANGUAGES CXX
     )
-set(CMAKE_CXX_STANDARD_REQUIRED 17)
+set(CMAKE_CXX_STANDARD_REQUIRED 20)
 file(GLOB SOURCES "*.cpp" "*.hpp")
 add_executable(engine ${SOURCES})

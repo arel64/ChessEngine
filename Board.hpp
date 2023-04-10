@@ -3,6 +3,8 @@
     #include <cstdint>
     #include <cstdio>
     #include <cassert>
+#include <memory>
+#include <utility>
 
     #define BOARD_DIM (8)
     #define BOARD_SIZE BOARD_DIM * BOARD_DIM
@@ -29,7 +31,17 @@
     #define BLACK_QUEEN_START (0x0800000000000000)
     #define BLACK_KING_START (0x1000000000000000)
     
-  
+    enum Directions
+    {
+        NORTH = 0,
+        SOUTH,
+        EAST,
+        WEST,
+        NORTH_EAST,
+        NORTH_WEST,
+        SOUTH_EAST,
+        SOUTH_WEST
+    };
     enum RANKS
     {
         RANK_1 = 0,
@@ -68,6 +80,18 @@
         ALL,
         NONE
     };
+    struct moveInfo{
+      uint8_t sourceSquare;
+      uint64_t moveBoard; 
+
+      uint8_t castleInfo;
+      bool passant_capture;   
+      uint16_t enPassantSquare;
+
+      bool promotion;
+      PieceType promotion_piece;
+
+    }typedef moveInfo;
     Color operator~(Color color);
     class Board
     {
@@ -78,8 +102,11 @@
                          other->m_blackPawns, other->m_blackKnights, other->m_blackBishops, other->m_blackRooks, other->m_blackQueens, other->m_blackKing){};
             Board(uint64_t whitePawns, uint64_t whiteKnights, uint64_t whiteBishops, uint64_t whiteRooks, uint64_t whiteQueens, uint64_t whiteKing,
                 uint64_t blackPawns, uint64_t blackKnights, uint64_t blackBishops, uint64_t blackRooks, uint64_t blackQueens, uint64_t blackKing);
+            Board(std::shared_ptr<Board>board,moveInfo move);
             void printBoard();
-            uint64_t getPieceBitBoard(uint8_t pieceType, uint8_t color);
+            uint64_t getPieceBitBoard(PieceType pieceType, Color color);
+            std::pair<PieceType, Color> getPieceOnSquare(uint8_t square);
+            inline static uint8_t getSquare(uint64_t occ) { return occ==0 ?  0: __builtin_ctz(occ);}
             constexpr uint64_t getPiecesByColor(Color color){{
                 if(color == WHITE)
                 {
