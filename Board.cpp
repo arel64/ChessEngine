@@ -37,7 +37,7 @@ Board::Board(uint64_t whitePawns, uint64_t whiteKnights, uint64_t whiteBishops, 
     m_blackKing    = blackKing;
 }
 
-uint64_t Board::getPieceBitBoard(uint8_t pieceType, uint8_t color)
+uint64_t Board::getPieceBitBoard(PieceType pieceType, Color color)
 {
     switch(pieceType)
     {
@@ -186,4 +186,8 @@ void Board::printBoard()
             printf("\n");
         }
     }
+}
+Board::Board(std::shared_ptr<Board>board,moveInfo move)
+{
+    
 }
