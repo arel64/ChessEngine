@@ -33,11 +33,11 @@
         uint16_t m_enPassantSquare;
     
       private:
-        uint64_t generateKingMoves(Color color);
-        uint64_t generateQueenMoves(Color color);
-        uint64_t generateRookMoves(Color color);
-        uint64_t generateBishopMoves(Color color);
-        uint64_t generateKnightMoves(Color color);
-        uint64_t generatePawnMoves(Color color);
+        uint64_t generateKingMoves();
+        uint64_t generateQueenMoves();
+        uint64_t generateRookMoves();
+        uint64_t generateBishopMoves();
+        uint64_t generateKnightMoves();
+        uint64_t generatePawnMoves();
     };
 #endif
