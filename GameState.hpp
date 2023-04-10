@@ -31,5 +31,13 @@
             TODO:: To be implemented
         */
         uint16_t m_enPassantSquare;
+    
+      private:
+        uint64_t generateKingMoves(Color color);
+        uint64_t generateQueenMoves(Color color);
+        uint64_t generateRookMoves(Color color);
+        uint64_t generateBishopMoves(Color color);
+        uint64_t generateKnightMoves(Color color);
+        uint64_t generatePawnMoves(Color color);
     };
 #endif

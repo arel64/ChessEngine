@@ -4,17 +4,10 @@
 #include <memory>
 
 #define SHIFT_SIGN(color,pawns,num) (color == WHITE ? (pawns << num) : (pawns >> num))
-uint64_t generateKingMoves(Board *,Color color);
-uint64_t generateQueenMoves(Board *,Color color);
-uint64_t generateRookMoves(Board *,Color color);
-uint64_t generateBishopMoves(Board *,Color color);
-uint64_t generateKnightMoves(Board *,Color color);
-uint64_t generatePawnMoves(Board *,Color color);
 
 
 std::unique_ptr<Board> GameState::generateMoveBoard()
 {
-    //auto moveBoard = std::make_unique<Board>(new Board(m_board.get()));
     
     /*
         King Moves
@@ -42,43 +35,43 @@ uint64_t GameState::generatePieceMoves(PieceType piece)
     switch(piece)
     {
         case KING:
-            return generateKingMoves(m_board.get(),m_playerToMove);
+            return generateKingMoves(m_playerToMove);
             break;
         case QUEEN:
-            return generateQueenMoves(m_board.get(),m_playerToMove);
+            return generateQueenMoves(m_playerToMove);
             break;
         case ROOK:
-            return generateRookMoves(m_board.get(),m_playerToMove);
+            return generateRookMoves(m_playerToMove);
             break;
         case BISHOP:
-            return generateBishopMoves(m_board.get(),m_playerToMove);
+            return generateBishopMoves(m_playerToMove);
             break;
         case KNIGHT:
-            return generateKnightMoves(m_board.get(),m_playerToMove);
+            return generateKnightMoves(m_playerToMove);
             break;
         case PAWN:
-            return generatePawnMoves(m_board.get(),m_playerToMove);
+            return generatePawnMoves(m_playerToMove);
             break;
         default:
             return 0;
     }
 }
 
-uint64_t generateKingMoves (Board *board,Color color)
+uint64_t GameState::generateKingMoves (Color color)
 {
-    uint64_t king = board->getPieceBitBoard(KING, color);
+    uint64_t king = m_board->getPieceBitBoard(KING, color);
     uint64_t kingClipFileA = king & CLEAR_FILE_MASK(FILE_A);
     uint64_t kingClipFileH = king & CLEAR_FILE_MASK(FILE_H);
     uint64_t king_moves = (
             (kingClipFileA << 7) | (king << 8) | (kingClipFileH << 9) | (kingClipFileA >> 1) |
             (kingClipFileH << 1) | (kingClipFileA >> 9) | (king >> 8) | (kingClipFileH >> 7)
         );
-    uint64_t king_moves_legal = king_moves & ~board->getPiecesByColor(color);
+    uint64_t king_moves_legal = king_moves & ~m_board->getPiecesByColor(color);
     return king_moves_legal;
 }
-uint64_t generateKnightMoves(Board *board,Color color)
+uint64_t GameState::generateKnightMoves(Color color)
 {
-    uint64_t knights = board->getPieceBitBoard(KNIGHT, color);
+    uint64_t knights = m_board->getPieceBitBoard(KNIGHT, color);
     uint64_t knightClipFileA = knights & CLEAR_FILE_MASK(FILE_A);
     uint64_t knightClipFileAB = knightClipFileA & CLEAR_FILE_MASK(FILE_B);
     uint64_t knightClipFileH = knights & CLEAR_FILE_MASK(FILE_H);
@@ -88,35 +81,35 @@ uint64_t generateKnightMoves(Board *board,Color color)
             (knightClipFileAB << 6) | (knightClipFileA << 15) | (knightClipFileH << 17) | (knightClipFileGH << 10) |
             (knightClipFileGH >> 6) | (knightClipFileH >> 15) | (knightClipFileA >> 17) | (knightClipFileAB >> 10)
         );
-    uint64_t knight_moves_legal = knight_moves & ~board->getPiecesByColor(color);
+    uint64_t knight_moves_legal = knight_moves & ~m_board->getPiecesByColor(color);
     return knight_moves_legal;
 }
-uint64_t generateQueenMoves(Board *,Color color)
+uint64_t GameState::generateQueenMoves(Color color)
 {
     return 0;
 }
-uint64_t generateRookMoves(Board *,Color color)
+uint64_t GameState::generateRookMoves(Color color)
 {
     return 0;
 }
-uint64_t generateBishopMoves(Board *,Color color)
+uint64_t GameState::generateBishopMoves(Color color)
 {
     return 0;
 }
-uint64_t generatePawnMoves(Board *board,Color color)
+uint64_t GameState::generatePawnMoves(Color color)
 {
-    uint64_t pawns = board->getPieceBitBoard(PAWN, color);
+    uint64_t pawns = m_board->getPieceBitBoard(PAWN, color);
     uint64_t pawnClipFileA = pawns & CLEAR_FILE_MASK(FILE_A);
     uint64_t pawnClipFileH = pawns & CLEAR_FILE_MASK(FILE_H);
     uint64_t pawnOneStep = (SHIFT_SIGN(color,pawns,8));
     uint64_t pawnTwoStep = (SHIFT_SIGN(color,pawns,16));
     
-    uint64_t validMoves = (pawnOneStep & ~board->getPiecesByColor(ALL)) | (pawnTwoStep & ~board->getPiecesByColor(ALL));
+    uint64_t validMoves = (pawnOneStep & ~m_board->getPiecesByColor(ALL)) | (pawnTwoStep & ~m_board->getPiecesByColor(ALL));
     
     uint64_t pawnAttackLeft  = SHIFT_SIGN(color,(((color==WHITE) ? pawnClipFileA:pawnClipFileH)),7);
     uint64_t pawnAttackRight = SHIFT_SIGN(color,(((color==WHITE) ? pawnClipFileH:pawnClipFileA)),9);
 
-    uint64_t validAttacks = (pawnAttackLeft | pawnAttackRight ) & board->getPiecesByColor(~color);
+    uint64_t validAttacks = (pawnAttackLeft | pawnAttackRight ) & m_board->getPiecesByColor(~color);
 
     return validAttacks | validMoves;
 }
