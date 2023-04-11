@@ -3,8 +3,9 @@
     #include <cstdint>
     #include <cstdio>
     #include <cassert>
-#include <memory>
-#include <utility>
+    #include <memory>
+    #include <utility>
+    #include <vector>
 
     #define BOARD_DIM (8)
     #define BOARD_SIZE BOARD_DIM * BOARD_DIM
@@ -71,7 +72,8 @@
         BISHOP,
         ROOK,
         QUEEN,
-        KING
+        KING,
+        NO_PIECE
     };
     enum Color
     {
@@ -82,6 +84,9 @@
     };
     struct moveInfo{
       uint8_t sourceSquare;
+      uint8_t targetSquare;
+
+
       uint64_t moveBoard; 
 
       uint8_t castleInfo;
@@ -106,7 +111,7 @@
             void printBoard();
             uint64_t getPieceBitBoard(PieceType pieceType, Color color);
             std::pair<PieceType, Color> getPieceOnSquare(uint8_t square);
-            inline static uint8_t getSquare(uint64_t occ) { return occ==0 ?  0: __builtin_ctz(occ);}
+            inline static uint8_t getSquare(uint64_t occ) { return occ==0 ?  0: std::__countr_zero(occ);}
             constexpr uint64_t getPiecesByColor(Color color){{
                 if(color == WHITE)
                 {
@@ -121,6 +126,8 @@
                 }
             }}
         private:
+
+
         /*
             This is a bitboard representation of the board
             0 means empty square and 1 means occupied square of the respective color and piece
@@ -138,5 +145,9 @@
             uint64_t m_blackRooks;
             uint64_t m_blackQueens;
             uint64_t m_blackKing;
+            //std::vector<uint64_t> m_allPieces;
+        private:
+            void setPieceBitBoard(PieceType pieceType, Color color,int64_t bitBoard);
+
     };
 #endif

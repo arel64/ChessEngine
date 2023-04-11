@@ -1,8 +1,6 @@
 #include "GameState.hpp"
 #include "Board.hpp"
-#include <cstdint>
-#include <memory>
-#include <vector>
+
 
 #define SHIFT_SIGN(color,pawns,num) (color == WHITE ? (pawns << num) : (pawns >> num))
 #define BISHOP_MOVE(square) \
@@ -23,18 +21,17 @@
         rook_moves |= getNegativeRayAttack(square, WEST); \
         rook_moves; \
     })
+#define IS_SLIDING(piece) (piece == BISHOP || piece == ROOK || piece == QUEEN)
 std::shared_ptr<std::vector<moveInfo>> GameState::generateMoveInfoVec()
 {
     
-    /*
-        King Moves
-    */
-    std::shared_ptr<std::vector<moveInfo>> kingLegal      = generatePieceMoves(KING);
-    std::shared_ptr<std::vector<moveInfo>> queenLegal     = generatePieceMoves(QUEEN);
-    std::shared_ptr<std::vector<moveInfo>> rookLegal      = generatePieceMoves(ROOK);
-    std::shared_ptr<std::vector<moveInfo>> bishopLegal    = generatePieceMoves(BISHOP);
-    std::shared_ptr<std::vector<moveInfo>> knightLegal    = generatePieceMoves(KNIGHT);
-    std::shared_ptr<std::vector<moveInfo>> pawnLegal      = generatePieceMoves(PAWN);
+   
+    std::shared_ptr<std::vector<moveInfo>> kingLegal      = generateMove(KING);
+    std::shared_ptr<std::vector<moveInfo>> queenLegal     = generateMove(QUEEN);
+    std::shared_ptr<std::vector<moveInfo>> rookLegal      = generateMove(ROOK);
+    std::shared_ptr<std::vector<moveInfo>> bishopLegal    = generateMove(BISHOP);
+    std::shared_ptr<std::vector<moveInfo>> knightLegal    = generateMove(KNIGHT);
+    std::shared_ptr<std::vector<moveInfo>> pawnLegal      = generateMove(PAWN);
     
     std::shared_ptr<std::vector<moveInfo>> legalMoves = std::make_shared<std::vector<moveInfo>>();
     legalMoves->insert(legalMoves->end(),kingLegal->begin(),kingLegal->end());
@@ -46,53 +43,38 @@ std::shared_ptr<std::vector<moveInfo>> GameState::generateMoveInfoVec()
 
     return legalMoves;
 }
-std::shared_ptr<std::vector<moveInfo>> GameState::generatePieceMoves(PieceType piece)
-{
-    switch(piece)
-    {
-        case KING:
-            return generateKingMoves();
-            break;
-        case QUEEN:
-            return generateQueenMoves();
-            break;
-        case ROOK:
-            return generateRookMoves();
-            break;
-        case BISHOP:
-            return generateBishopMoves();
-            break;
-        case KNIGHT:
-            return generateKnightMoves();
-            break;
-        case PAWN:
-            return generatePawnMoves();
-            break;
-        default:
-            return 0;
-    }
-}
 
-std::shared_ptr<std::vector<moveInfo>> GameState::generateKingMoves ()
+std::shared_ptr<std::vector<moveInfo>> GameState::generateMove(PieceType p)
 {
-    return generateNonSlidingMoves(KING);
-}
-std::shared_ptr<std::vector<moveInfo>> GameState::generateNonSlidingMoves(PieceType p)
-{
+    uint64_t piece_moves = 0;
     uint64_t pieces = m_board->getPieceBitBoard(p, m_playerToMove);
     auto pieceMovesLegalVec = std::make_shared<std::vector<moveInfo>>(8);
+    
     while(pieces != 0)
-    {
-        uint8_t  square = __builtin_ctz(pieces);
-        uint64_t piece = 1 << square;
-        uint64_t pieceClipFileA = piece & CLEAR_FILE_MASK(FILE_A);
-        uint64_t pieceClipFileAB = pieceClipFileA & CLEAR_FILE_MASK(FILE_B);
-        uint64_t pieceClipFileH = piece & CLEAR_FILE_MASK(FILE_H);
-        uint64_t pieceClipFileGH = pieceClipFileH & CLEAR_FILE_MASK(FILE_G);
-        uint64_t piece_moves = 0;
-        moveInfo move = {square,0,0,0,0,0};
-        switch (p)
+    {             
+        uint8_t square = std::__countr_zero(pieces);
+        uint64_t piece = 1ull << square;
+        moveInfo move = {square,0,0,0,0,0};                           
+        uint64_t pieceClipFileA = 0, pieceClipFileAB = 0, pieceClipFileH = 0, pieceClipFileGH = 0;
+        if(IS_SLIDING(p))
         {
+            pieceClipFileA = piece & CLEAR_FILE_MASK(FILE_A);
+            pieceClipFileAB = pieceClipFileA & CLEAR_FILE_MASK(FILE_B);
+            pieceClipFileH = piece & CLEAR_FILE_MASK(FILE_H);
+            pieceClipFileGH = pieceClipFileH & CLEAR_FILE_MASK(FILE_G);
+        }
+        
+        switch (p) {
+            case BISHOP:
+                piece_moves |= BISHOP_MOVE(square);
+                break;
+            case ROOK:
+                piece_moves |= ROOK_MOVE(square);
+                break;
+            case QUEEN:
+                piece_moves |= BISHOP_MOVE(square);
+                piece_moves |= ROOK_MOVE(square);
+                break;
             case PAWN:{
                 uint64_t pawnOneStep = (SHIFT_SIGN(m_playerToMove,piece,8));
                 uint64_t pawnTwoStep = (SHIFT_SIGN(m_playerToMove,piece,16));
@@ -127,83 +109,22 @@ std::shared_ptr<std::vector<moveInfo>> GameState::generateNonSlidingMoves(PieceT
                 break;
             }
             default:
-            {
                 assert(false);
                 break;
-            }
         }
         move.moveBoard = piece_moves;
         pieceMovesLegalVec->push_back(move);
-        pieces ^= piece;
-    }
-    
-    return pieceMovesLegalVec;
-}
-
-std::shared_ptr<std::vector<moveInfo>> GameState::generateKnightMoves()
-{
-    return generateNonSlidingMoves(KNIGHT);
-
-}
-std::shared_ptr<std::vector<moveInfo>> GameState::generateQueenMoves()
-{
-    return generateSlidingMoves(PieceType::QUEEN);
-}
-std::shared_ptr<std::vector<moveInfo>> GameState::generateRookMoves()
-{
-    return generateSlidingMoves(PieceType::ROOK);
-
-}
-std::shared_ptr<std::vector<moveInfo>> GameState::generateBishopMoves()
-{
-    return generateSlidingMoves(PieceType::BISHOP);
-}
-std::shared_ptr<std::vector<moveInfo>> GameState::generateSlidingMoves(PieceType p)
-{
-    uint64_t piece_moves = 0;
-    uint8_t square = 0;
-    uint64_t pieces = m_board->getPieceBitBoard(p, m_playerToMove);
-    auto pieceMovesLegalVec = std::make_shared<std::vector<moveInfo>>(8);
-
-    while(pieces != 0)
-    {             
-        uint8_t leading_zeros = __builtin_ctz(pieces);
-        uint8_t piece = 1 << leading_zeros;
-        moveInfo move = {square,0,0,0,0,0};                           
-
-        switch (p) {
-            case BISHOP:
-                piece_moves |= BISHOP_MOVE(square);
-                break;
-            case ROOK:
-                piece_moves |= ROOK_MOVE(square);
-                break;
-            case QUEEN:
-                piece_moves |= BISHOP_MOVE(square);
-                piece_moves |= ROOK_MOVE(square);
-                break;
-            default:
-                break;
-        }
-        move.moveBoard = piece_moves;
-        pieceMovesLegalVec->push_back(move);
-        pieces ^= piece;
+        pieces &= ~piece;
     }
     return pieceMovesLegalVec;
 }
-std::shared_ptr<std::vector<moveInfo>> GameState::generatePawnMoves()
-{
-    return generateNonSlidingMoves(PAWN);
 
-}
-
-
-GameState::GameState(Board* board,uint8_t castleInfo,Color playerToMove,uint16_t enPassantSquare)
+GameState::GameState(std::shared_ptr<Board>board,uint8_t castleInfo,Color playerToMove,uint16_t enPassantSquare)
 {
     m_castleInfo = castleInfo;
     m_playerToMove = playerToMove;
     m_enPassantSquare = enPassantSquare;
-    m_board = std::make_unique<Board>(new Board(board));
+    m_board = board;
     m_moveInfoVec = generateMoveInfoVec();
     if(!GameState::isRayAttacksInitialized)
     {
@@ -275,11 +196,11 @@ uint64_t GameState::getRayAttack(bool positive,uint8_t square, Directions direct
     {
         if(positive)
         {
-            square = __builtin_ctz(blocking);
+            square = std::__countr_zero(blocking);
         }
         else
         {
-            square = __builtin_clz(blocking);
+            square = std::__countl_zero(blocking);
         }
         rayValue ^= GameState::RAY_ATTACKS[square][direction];
     }
@@ -288,7 +209,7 @@ uint64_t GameState::getRayAttack(bool positive,uint8_t square, Directions direct
 std::shared_ptr<GameState> GameState::playPly(uint8_t sourceSquare,uint8_t targetSquare)
 {
     auto moveBoard = getMoveInfoVec();
-    uint8_t sourceSquareMask = (1ull) << sourceSquare;
+    uint64_t sourceSquareMask = (1ull) << sourceSquare;
 
     if((m_board->getPiecesByColor(m_playerToMove) & sourceSquareMask) == 0)
     {
@@ -312,11 +233,20 @@ std::shared_ptr<GameState> GameState::playPly(uint8_t sourceSquare,uint8_t targe
         }
         m_castleInfo |= move.castleInfo;
         move.moveBoard &= (1ull << targetSquare);
-        std::shared_ptr<Board>board = std::make_shared<Board>( new Board(m_board.get(),move));
-        return std::make_shared<GameState>(new GameState(board,m_castleInfo,~m_playerToMove,move.enPassantSquare));
+        move.targetSquare = targetSquare;
+        std::shared_ptr<Board>board = std::make_shared<Board>( new Board(m_board,move));
+         return std::make_shared<GameState>(new GameState(board,m_castleInfo,~m_playerToMove,move.enPassantSquare));
     }
+    return nullptr;
 }
 
+void GameState::printGameState()
+{
+    m_board->printBoard();
+    std::cout << "Player to move: " << (m_playerToMove == WHITE ? "White" : "Black") << std::endl;
+    std::cout << "Castle Info: " << (int)m_castleInfo << std::endl;
+    std::cout << "En Passant Square: " << (int)m_enPassantSquare << std::endl;
+}
 GameState::~GameState()
 {
     

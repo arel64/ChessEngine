@@ -35,8 +35,77 @@ Board::Board(uint64_t whitePawns, uint64_t whiteKnights, uint64_t whiteBishops, 
     m_blackRooks   = blackRooks;
     m_blackQueens  = blackQueens;
     m_blackKing    = blackKing;
-}
+    
+    /*m_allPieces = std::vector<uint64_t>{m_whitePawns,m_whiteKnights,m_whiteBishops,m_whiteRooks,m_whiteQueens,m_whiteKing,
+                                        m_blackPawns,m_blackKnights,m_blackBishops,m_blackRooks,m_blackQueens,m_blackKing};*/
 
+}
+void Board::setPieceBitBoard(PieceType pieceType, Color color,int64_t bitBoard)
+{
+    switch(pieceType)
+    {
+        case PAWN:
+            if(color == WHITE)
+            {
+                m_whitePawns = bitBoard;
+            }
+            else
+            {
+                m_blackPawns = bitBoard;
+            }
+            break;
+        case KNIGHT:
+            if(color == WHITE)
+            {
+                m_whiteKnights = bitBoard;
+            }
+            else
+            {
+                m_blackKnights = bitBoard;
+            }
+            break;
+        case BISHOP:
+            if(color == WHITE)
+            {
+                m_whiteBishops = bitBoard;
+            }
+            else
+            {
+                m_blackBishops = bitBoard;
+            }
+            break;
+        case ROOK:
+            if(color == WHITE)
+            {
+                m_whiteRooks = bitBoard;
+            }
+            else
+            {
+                m_blackRooks = bitBoard;
+            }
+            break;
+        case QUEEN:
+            if(color == WHITE)
+            {
+                m_whiteQueens = bitBoard;
+            }
+            else
+            {
+                m_blackQueens = bitBoard;
+            }
+            break;
+        case KING:
+            if(color == WHITE)
+            {
+                m_whiteKing = bitBoard;
+            }
+            else
+            {
+                m_blackKing = bitBoard;
+            }
+            break;
+    }
+}
 uint64_t Board::getPieceBitBoard(PieceType pieceType, Color color)
 {
     switch(pieceType)
@@ -101,7 +170,18 @@ uint64_t Board::getPieceBitBoard(PieceType pieceType, Color color)
 }
 Color operator~(Color color)
 {
-    return static_cast<Color>(~static_cast<int>(color));
+    if(color == WHITE)
+    {
+        return BLACK;
+    }
+    else if(color == BLACK)
+    {
+        return WHITE;
+    }
+    else
+    {
+        assert(false);
+    }
 }
 void Board::printBoard()
 {
@@ -187,7 +267,51 @@ void Board::printBoard()
         }
     }
 }
+std::pair<PieceType, Color> Board::getPieceOnSquare(uint8_t square)
+{
+    for (auto pieceType : {PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING})
+    {
+        for (auto color : {WHITE, BLACK})
+        {
+            if (getPieceBitBoard(pieceType, color) & (1ull << square))
+            {
+                return {pieceType, color};
+            }
+        }
+    }
+    return {PieceType::NO_PIECE,Color::NONE};
+}
+
 Board::Board(std::shared_ptr<Board>board,moveInfo move)
 {
-    
+    m_whitePawns   = board->getPieceBitBoard(PAWN,WHITE);
+    m_whiteKnights = board->getPieceBitBoard(KNIGHT,WHITE);
+    m_whiteBishops = board->getPieceBitBoard(BISHOP,WHITE);
+    m_whiteRooks   = board->getPieceBitBoard(ROOK,WHITE);
+    m_whiteQueens  = board->getPieceBitBoard(QUEEN,WHITE);
+    m_whiteKing    = board->getPieceBitBoard(KING,WHITE);
+    m_blackPawns   = board->getPieceBitBoard(PAWN,BLACK);
+    m_blackKnights = board->getPieceBitBoard(KNIGHT,BLACK);
+    m_blackBishops = board->getPieceBitBoard(BISHOP,BLACK);
+    m_blackRooks   = board->getPieceBitBoard(ROOK,BLACK);
+    m_blackQueens  = board->getPieceBitBoard(QUEEN,BLACK);
+    m_blackKing    = board->getPieceBitBoard(KING,BLACK);
+
+
+    auto sourcePiece = getPieceOnSquare(move.sourceSquare);
+    auto targetPiece = getPieceOnSquare(move.targetSquare);
+    if(targetPiece.first != NO_PIECE)
+    {
+        int64_t modifiedTarget = board->getPieceBitBoard(targetPiece.first,targetPiece.second);
+        modifiedTarget &= ~(1ull << move.targetSquare);
+        setPieceBitBoard(targetPiece.first,targetPiece.second,modifiedTarget);
+
+    }
+    int64_t modifiedSource = board->getPieceBitBoard(sourcePiece.first,sourcePiece.second);
+    modifiedSource &= ~(1ull << move.sourceSquare);
+    modifiedSource |= (1ull << move.targetSquare);    
+    setPieceBitBoard(sourcePiece.first,sourcePiece.second,modifiedSource);
+    /*_allPieces = std::vector<uint64_t>{m_whitePawns,m_whiteKnights,m_whiteBishops,m_whiteRooks,m_whiteQueens,m_whiteKing,
+                                        m_blackPawns,m_blackKnights,m_blackBishops,m_blackRooks,m_blackQueens,m_blackKing};*/
+
 }

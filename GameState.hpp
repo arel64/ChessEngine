@@ -2,10 +2,11 @@
 #define MACRO_GAMESTATE_HPP
 #include "Board.hpp"
 #include <cstdint>
+#include <iostream>
 #include <stdint.h>
 #include <memory>
 #include <vector> 
-    
+#include <bit>
     class GameState
     {
       public:
@@ -15,6 +16,7 @@
         uint64_t getPositiveRayAttack(uint8_t square,Directions direction);
         uint64_t getNegativeRayAttack(uint8_t square,Directions direction);
         auto getMoveInfoVec(){return m_moveInfoVec;};
+        void printGameState();
         GameState(std::shared_ptr<Board>,uint8_t castleInfo,Color playerToMove,uint16_t enPassantSquare);
         GameState(GameState const *gameState) : GameState(gameState->m_board, gameState->m_castleInfo, gameState->m_playerToMove, gameState->m_enPassantSquare) {}
         GameState() : GameState(std::make_shared<Board>(new Board()),0,WHITE,0) {};        
@@ -45,14 +47,7 @@
 
       private:
         std::shared_ptr<std::vector<moveInfo>> generateMoveInfoVec();
-        std::shared_ptr<std::vector<moveInfo>> generateSlidingMoves(PieceType);
-        std::shared_ptr<std::vector<moveInfo>> generateNonSlidingMoves(PieceType);
-        std::shared_ptr<std::vector<moveInfo>> generateKingMoves();
-        std::shared_ptr<std::vector<moveInfo>> generateQueenMoves();
-        std::shared_ptr<std::vector<moveInfo>> generateRookMoves();
-        std::shared_ptr<std::vector<moveInfo>> generateBishopMoves();
-        std::shared_ptr<std::vector<moveInfo>> generateKnightMoves();
-        std::shared_ptr<std::vector<moveInfo>> generatePawnMoves();
+        std::shared_ptr<std::vector<moveInfo>> generateMove(PieceType p);
         uint64_t initRayAttacksForSquare(uint8_t square,int direction);
         uint64_t getRayAttack(bool positive,uint8_t square,Directions direction);
         void     initRayAttacks();
