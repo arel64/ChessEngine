@@ -1,6 +1,6 @@
 
-#include "Board.hpp"
-#include "GameState.hpp"
+#include "./src/Board.hpp"
+#include "./src/GameState.hpp"
 #include <memory>
 #include <iostream>
 int main(int argc,char **argv)

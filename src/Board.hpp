@@ -66,6 +66,19 @@
         FILE_G,
         FILE_H
     };
+    //Little-Endian Rank-File Mapping
+    enum SQUARES
+    {
+        A1=0, B1, C1, D1, E1, F1, G1, H1,
+        A2, B2, C2, D2, E2, F2, G2, H2,
+        A3, B3, C3, D3, E3, F3, G3, H3,
+        A4, B4, C4, D4, E4, F4, G4, H4,
+        A5, B5, C5, D5, E5, F5, G5, H5,
+        A6, B6, C6, D6, E6, F6, G6, H6,
+        A7, B7, C7, D7, E7, F7, G7, H7,
+        A8, B8, C8, D8, E8, F8, G8, H8
+
+    };
     namespace NS_PieceType
     {
         enum PieceType
@@ -120,8 +133,8 @@
         public:
             Board();
             Board(Board const *other) :
-                Board(other->m_whitePawns, other->m_whiteKnights, other->m_whiteBishops, other->m_whiteRooks, other->m_whiteQueens, other->m_whiteKing,
-                         other->m_blackPawns, other->m_blackKnights, other->m_blackBishops, other->m_blackRooks, other->m_blackQueens, other->m_blackKing){};
+            Board(other->m_whitePawns, other->m_whiteKnights, other->m_whiteBishops, other->m_whiteRooks, other->m_whiteQueens, other->m_whiteKing,
+                        other->m_blackPawns, other->m_blackKnights, other->m_blackBishops, other->m_blackRooks, other->m_blackQueens, other->m_blackKing){};
             Board(uint64_t whitePawns, uint64_t whiteKnights, uint64_t whiteBishops, uint64_t whiteRooks, uint64_t whiteQueens, uint64_t whiteKing,
                 uint64_t blackPawns, uint64_t blackKnights, uint64_t blackBishops, uint64_t blackRooks, uint64_t blackQueens, uint64_t blackKing);
             Board(std::shared_ptr<Board>board,moveInfo move);
