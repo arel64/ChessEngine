@@ -9,5 +9,6 @@ int main(int argc,char **argv)
     gameState->printGameState();
     auto nextState = gameState->playPly(9,25);
     nextState->printGameState();
+    
     return 0;
 }

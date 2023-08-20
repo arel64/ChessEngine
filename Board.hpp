@@ -7,6 +7,7 @@
     #include <utility>
     #include <vector>
 
+    
     #define BOARD_DIM (8)
     #define BOARD_SIZE BOARD_DIM * BOARD_DIM
     #define NO_MOVE (0)
@@ -65,23 +66,39 @@
         FILE_G,
         FILE_H
     };
-    enum PieceType
+    namespace NS_PieceType
     {
-        PAWN,
-        KNIGHT,
-        BISHOP,
-        ROOK,
-        QUEEN,
-        KING,
-        NO_PIECE
-    };
-    enum Color
+        enum PieceType
+        {
+            PAWN,
+            KNIGHT,
+            BISHOP,
+            ROOK,
+            QUEEN,
+            KING,
+            NO_PIECE
+        };
+        static const PieceType AllPieces[] = {PAWN,KNIGHT,BISHOP,ROOK,QUEEN,KING};
+        static const PieceType AllPiecesEnum[] = {PAWN,KNIGHT,BISHOP,ROOK,QUEEN,KING,NO_PIECE};
+      
+    }
+    using namespace NS_PieceType;
+
+    namespace NS_Color
     {
-        WHITE=0,
-        BLACK,
-        ALL,
-        NONE
-    };
+        enum Color
+        {
+            WHITE=0,
+            BLACK,
+            ALL,
+            NONE
+        };
+        static const Color AllColors[] = {WHITE,BLACK};
+        static const Color AllColorsEnum[] = {WHITE,BLACK,ALL,NONE};
+    }
+    
+    using namespace NS_Color;
+    
     struct moveInfo{
       uint8_t sourceSquare;
       uint8_t targetSquare;
