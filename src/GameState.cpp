@@ -48,7 +48,7 @@ std::shared_ptr<std::vector<moveInfo>> GameState::generateMove(PieceType p)
 {
     uint64_t piece_moves = 0;
     uint64_t pieces = m_board->getPieceBitBoard(p, m_playerToMove);
-    auto pieceMovesLegalVec = std::make_shared<std::vector<moveInfo>>(8);
+    auto pieceMovesLegalVec = std::make_shared<std::vector<moveInfo>>();
     
     while(pieces != 0)
     {             
@@ -56,7 +56,7 @@ std::shared_ptr<std::vector<moveInfo>> GameState::generateMove(PieceType p)
         uint64_t piece = 1ull << square;
         moveInfo move = {square,0,0,0,0,0};                           
         uint64_t pieceClipFileA = 0, pieceClipFileAB = 0, pieceClipFileH = 0, pieceClipFileGH = 0;
-        if(IS_SLIDING(p))
+        if(!IS_SLIDING(p))
         {
             pieceClipFileA = piece & CLEAR_FILE_MASK(FILE_A);
             pieceClipFileAB = pieceClipFileA & CLEAR_FILE_MASK(FILE_B);
@@ -77,7 +77,13 @@ std::shared_ptr<std::vector<moveInfo>> GameState::generateMove(PieceType p)
                 break;
             case PAWN:{
                 uint64_t pawnOneStep = (SHIFT_SIGN(m_playerToMove,piece,8));
-                uint64_t pawnTwoStep = (SHIFT_SIGN(m_playerToMove,piece,16));
+                uint64_t pawnTwoStep = 0;
+                if((piece & (m_playerToMove == WHITE ? GET_K_RANK(2):GET_K_RANK(7))) != 0)
+                {
+                    //Piece is on the second rank if white and 7th if black
+                    pawnTwoStep = (SHIFT_SIGN(m_playerToMove,piece,16));
+                }
+                
 
                 uint64_t validMoves = (pawnOneStep & ~m_board->getPiecesByColor(ALL)) | (pawnTwoStep & ~m_board->getPiecesByColor(ALL));
 
@@ -104,7 +110,7 @@ std::shared_ptr<std::vector<moveInfo>> GameState::generateMove(PieceType p)
                     (pieceClipFileA << 7) | (piece << 8)          | (pieceClipFileH << 9) | (pieceClipFileA >> 1) |
                     (pieceClipFileH << 1) | (pieceClipFileA >> 9) | (piece >> 8)          | (pieceClipFileH >> 7)
                 );
-                uint64_t kingMovesLegal = king_moves & ~m_board->getPiecesByColor(m_playerToMove);
+                piece_moves = king_moves & ~m_board->getPiecesByColor(m_playerToMove);
                 move.castleInfo = m_playerToMove == WHITE ? 1: 1<<4; // Signefies that this is a king moved
                 break;
             }
@@ -112,9 +118,14 @@ std::shared_ptr<std::vector<moveInfo>> GameState::generateMove(PieceType p)
                 assert(false);
                 break;
         }
-        move.moveBoard = piece_moves;
-        pieceMovesLegalVec->push_back(move);
         pieces &= ~piece;
+
+        if(!(piece_moves == 0))
+        {
+            move.moveBoard = piece_moves;
+            pieceMovesLegalVec->push_back(move);
+        }
+        
     }
     return pieceMovesLegalVec;
 }
@@ -200,7 +211,11 @@ uint64_t GameState::getRayAttack(bool positive,uint8_t square, Directions direct
         }
         else
         {
-            square = std::__countl_zero(blocking);
+            /*
+                This isn't supposed to work! note that it will probably break
+            */
+            square = std::__countr_zero(blocking);
+            //square = std::__countl_zero(blocking);
         }
         rayValue ^= GameState::RAY_ATTACKS[square][direction];
     }
@@ -235,7 +250,7 @@ std::shared_ptr<GameState> GameState::playPly(uint8_t sourceSquare,uint8_t targe
         move.moveBoard &= (1ull << targetSquare);
         move.targetSquare = targetSquare;
         std::shared_ptr<Board>board = std::make_shared<Board>( new Board(m_board,move));
-         return std::make_shared<GameState>(new GameState(board,m_castleInfo,~m_playerToMove,move.enPassantSquare));
+        return std::make_shared<GameState>(new GameState(board,m_castleInfo,~m_playerToMove,move.enPassantSquare));
     }
     return nullptr;
 }
