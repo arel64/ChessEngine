@@ -9,7 +9,7 @@ project(
 set(CMAKE_CXX_STANDARD_REQUIRED 20)
 file(GLOB SOURCES "./src/*.cpp" "./src/*.hpp")
 file(GLOB SOURCES_TEST "tests/*.cpp" "tests/*.hpp")
-#add_executable(engine ${SOURCES})
+add_executable(chess_engine_main main.cpp ${SOURCES})
 
 FetchContent_Declare(
   Catch2
