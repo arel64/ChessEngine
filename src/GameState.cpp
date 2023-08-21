@@ -211,7 +211,11 @@ uint64_t GameState::getRayAttack(bool positive,uint8_t square, Directions direct
         }
         else
         {
-            square = std::__countl_zero(blocking);
+            /*
+                This isn't supposed to work! note that it will probably break
+            */
+            square = std::__countr_zero(blocking);
+            //square = std::__countl_zero(blocking);
         }
         rayValue ^= GameState::RAY_ATTACKS[square][direction];
     }
@@ -246,7 +250,7 @@ std::shared_ptr<GameState> GameState::playPly(uint8_t sourceSquare,uint8_t targe
         move.moveBoard &= (1ull << targetSquare);
         move.targetSquare = targetSquare;
         std::shared_ptr<Board>board = std::make_shared<Board>( new Board(m_board,move));
-         return std::make_shared<GameState>(new GameState(board,m_castleInfo,~m_playerToMove,move.enPassantSquare));
+        return std::make_shared<GameState>(new GameState(board,m_castleInfo,~m_playerToMove,move.enPassantSquare));
     }
     return nullptr;
 }

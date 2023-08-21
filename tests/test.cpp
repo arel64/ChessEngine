@@ -117,17 +117,89 @@ TEST_CASE( "generalized several ply game", "[unit]" ) {
                 }
             }
         }
-        /*auto board_single_black_pawn = std::make_shared<Board>(0,0,0,0,0,0,1ull << 35,0,0,0,0,0);
-        auto board_single_white_knight = std::make_shared<Board>(0,1ull << 35,0,0,0,0,0,0,0,0,0,0);
-        auto board_single_black_knight = std::make_shared<Board>(0,0,0,0,0,0,0,1ull << 35,0,0,0,0);
+        SECTION( "sliding" ) {
+             SECTION( "rook movement" ) {
+                SECTION( "white rook movement and capture" )
+                {
+                    std::unique_ptr<GameState>gameState;
+                    for(auto square : {B3,A3,D3,E3,F3,G3,H3,C1,C2,C4,C5,C6,C7,C8})
+                    {
+                        gameState = std::make_unique<GameState>(std::make_shared<Board>( 0,0,0,1ull << C3,0,0,0,0,0,0,0,0),0,WHITE,0); 
+                        SINGLE_PIECE_MOVE_TEST(ROOK,WHITE, C3,square,gameState);
+                        gameState  = std::make_unique<GameState>(std::make_shared<Board>( 0,0,0,1ull << C3,0,0,1ull << square,0,0,0,0,0),0,WHITE,0); 
+                        SINGLE_PIECE_MOVE_TEST_CAPTURE(ROOK,WHITE,PAWN,BLACK, C3,square,gameState);
+                    }
+                }
+                SECTION( "black rook movement and capture" )
+                {
+                    std::unique_ptr<GameState>gameState;
+                    for(auto square : {B3,A3,D3,E3,F3,G3,H3,C1,C2,C4,C5,C6,C7,C8})
+                    {
+                        gameState = std::make_unique<GameState>(std::make_shared<Board>( 0,0,0,0,0,0,0,0,0,1ull << C3,0,0),0,BLACK,0); 
+                        SINGLE_PIECE_MOVE_TEST(ROOK,BLACK, C3,square,gameState);
+                        gameState  = std::make_unique<GameState>(std::make_shared<Board>( 1ull << square,0,0,0,0,0,0,0,0,1ull << C3,0,0),0,BLACK,0); 
+                        SINGLE_PIECE_MOVE_TEST_CAPTURE(ROOK,BLACK,PAWN,WHITE, C3,square,gameState);
+                    }
+                }                
+            }
+            SECTION( "bishop movement" ) {
+                SECTION( "white bishop movement and capture" )
+                {
+                    std::unique_ptr<GameState>gameState;
+                    for(auto square : {A1,B2,D4,E5,F6,G7,H8,B4,A5,D2,E1})
+                    {
+                        gameState = std::make_unique<GameState>(std::make_shared<Board>( 0,0,1ull << C3,0,0,0,0,0,0,0,0,0),0,WHITE,0); 
+                        SINGLE_PIECE_MOVE_TEST(BISHOP,WHITE, C3,square,gameState);
+                        gameState  = std::make_unique<GameState>(std::make_shared<Board>( 0,0,1ull << C3,0,0,0,1ull << square,0,0,0,0,0),0,WHITE,0); 
+                        SINGLE_PIECE_MOVE_TEST_CAPTURE(BISHOP,WHITE,PAWN,BLACK, C3,square,gameState);
+                    }
+                }
+                SECTION( "black bishop movement and capture" )
+                {
+                    std::unique_ptr<GameState>gameState;
+                    for(auto square : {A1,B2,D4,E5,F6,G7,H8,B4,A5,D2,E1})
+                    {
+                        gameState = std::make_unique<GameState>(std::make_shared<Board>( 0,0,0,0,0,0,0,0,1ull << C3,0,0,0),0,BLACK,0); 
+                        SINGLE_PIECE_MOVE_TEST(BISHOP,BLACK, C3,square,gameState);
+                        gameState  = std::make_unique<GameState>(std::make_shared<Board>( 1ull << square,0,0,0,0,0,0,0,1ull << C3,0,0,0),0,BLACK,0); 
+                        SINGLE_PIECE_MOVE_TEST_CAPTURE(BISHOP,BLACK,PAWN,WHITE, C3,square,gameState);
+                    }
+                }                
+            }
+            SECTION( "queen movement" ) {
+                SECTION( "white queen movement and capture" )
+                {
+                    std::unique_ptr<GameState>gameState;
+                    for(auto square : {B3,A3,D3,E3,F3,G3,H3,C1,C2,C4,C5,C6,C7,C8,A1,B2,D4,E5,F6,G7,H8,B4,A5,D2,E1})
+                    {
+                        gameState = std::make_unique<GameState>(std::make_shared<Board>( 0,0,0,0,1ull << C3,0,0,0,0,0,0,0),0,WHITE,0); 
+                        SINGLE_PIECE_MOVE_TEST(QUEEN,WHITE, C3,square,gameState);
+                        gameState  = std::make_unique<GameState>(std::make_shared<Board>( 0,0,0,0,1ull << C3,0,1ull << square,0,0,0,0,0),0,WHITE,0); 
+                        SINGLE_PIECE_MOVE_TEST_CAPTURE(QUEEN,WHITE,PAWN,BLACK, C3,square,gameState);
+                    }
+                }
+                SECTION( "black queen movement and capture" )
+                {
+                    std::unique_ptr<GameState>gameState;
+                    for(auto square : {B3,A3,D3,E3,F3,G3,H3,C1,C2,C4,C5,C6,C7,C8,A1,B2,D4,E5,F6,G7,H8,B4,A5,D2,E1})
+                    {
+                        gameState = std::make_unique<GameState>(std::make_shared<Board>( 0,0,0,0,0,0,0,0,0,0,1ull << C3,0),0,BLACK,0); 
+                        SINGLE_PIECE_MOVE_TEST(QUEEN,BLACK, C3,square,gameState);
+                        gameState  = std::make_unique<GameState>(std::make_shared<Board>( 1ull << square,0,0,0,0,0,0,0,0,0,1ull << C3,0),0,BLACK,0); 
+                        SINGLE_PIECE_MOVE_TEST_CAPTURE(QUEEN,BLACK,PAWN,WHITE, C3,square,gameState);
+                    }
+                }                
+            }
+        }
+
+        /*
         auto board_single_white_bishop = std::make_shared<Board>(0,0,1ull << 35,0,0,0,0,0,0,0,0,0);
         auto board_single_black_bishop = std::make_shared<Board>(0,0,0,0,0,0,0,0,1ull << 35,0,0,0);
         auto board_single_white_rook = std::make_shared<Board>(0,0,0,1ull << 35,0,0,0,0,0,0,0,0);
         auto board_single_black_rook = std::make_shared<Board>(0,0,0,0,0,0,0,0,0,1ull << 35,0,0);
         auto board_single_white_queen = std::make_shared<Board>(0,0,0,0,1ull << 35,0,0,0,0,0,0,0);
         auto board_single_black_queen = std::make_shared<Board>(0,0,0,0,0,0,0,0,0,0,1ull << 35,0);
-        auto board_single_white_king = std::make_shared<Board>(0,0,0,0,0,1ull << 35,0,0,0,0,0,0);
-        auto board_single_black_king = std::make_shared<Board>(0,0,0,0,0,0,0,0,0,0,0,1ull << 35);*/
+       */
         
 
 
