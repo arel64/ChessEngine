@@ -269,9 +269,9 @@ void Board::printBoard()
 }
 std::pair<PieceType, Color> Board::getPieceOnSquare(uint8_t square)
 {
-    for (auto pieceType : {PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING})
+    for (auto pieceType : NS_PieceType::AllPieces)
     {
-        for (auto color : {WHITE, BLACK})
+        for (auto color : NS_Color::AllColors)
         {
             if (getPieceBitBoard(pieceType, color) & (1ull << square))
             {

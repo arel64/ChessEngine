@@ -1,6 +1,6 @@
 
-#include "Board.hpp"
-#include "GameState.hpp"
+#include "./src/Board.hpp"
+#include "./src/GameState.hpp"
 #include <memory>
 #include <iostream>
 int main(int argc,char **argv)
@@ -9,5 +9,6 @@ int main(int argc,char **argv)
     gameState->printGameState();
     auto nextState = gameState->playPly(9,25);
     nextState->printGameState();
+    
     return 0;
 }

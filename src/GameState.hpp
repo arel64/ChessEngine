@@ -11,11 +11,11 @@
     {
       public:
         std::shared_ptr<GameState> playPly(uint8_t sourceSquare,uint8_t targetSquare);
-        
         std::shared_ptr<std::vector<moveInfo>> generatePieceMoves(PieceType piece);
         uint64_t getPositiveRayAttack(uint8_t square,Directions direction);
         uint64_t getNegativeRayAttack(uint8_t square,Directions direction);
         auto getMoveInfoVec(){return m_moveInfoVec;};
+        auto getBoard(){return std::make_unique<Board>(m_board.get());};
         void printGameState();
         GameState(std::shared_ptr<Board>,uint8_t castleInfo,Color playerToMove,uint16_t enPassantSquare);
         GameState(GameState const *gameState) : GameState(gameState->m_board, gameState->m_castleInfo, gameState->m_playerToMove, gameState->m_enPassantSquare) {}
