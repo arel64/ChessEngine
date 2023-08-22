@@ -1,4 +1,5 @@
 
+#include "src/GameState.hpp"
 #include "src/UCIHandeling.hpp"
 #include <memory>
 #include <iostream>
@@ -7,7 +8,9 @@
 using namespace std;
 
 int main() {
-    std::unique_ptr<UCIHandeling> UCIHandeler = std::make_unique<UCIHandeling>();
-    UCIHandeler->startUciHandler();
+    std::shared_ptr<Engine> engine = std::make_unique<Engine>();
+    std::unique_ptr<UCIHandeling> uciHandler = std::make_unique<UCIHandeling>(engine);
+    uciHandler->startUciHandler();
+ 
     return 0;
 }

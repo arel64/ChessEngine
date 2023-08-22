@@ -1,5 +1,6 @@
 #ifndef MACRO_UCIHandeling_HPP
 #define MACRO_UCIHandeling_HPP
+#include "Engine.hpp"
 #include <memory>
 #include <vector>
 #include <mutex>
@@ -11,8 +12,11 @@
 #include <unordered_map>
 #include <iostream>
 #include <atomic>
-#define ENGINE_NAME ("FAF Engine")
-#define ENGINE_AUTHOR ("Arel Sharon")
+#include <iterator>
+#include <sstream>
+
+#define ENGINE_NAME "FAF Engine"
+#define ENGINE_AUTHOR "Arel Sharon"
 namespace NS_UCICommands{
     class UCICommand;
 };
@@ -21,10 +25,18 @@ class UCIHandeling
     public:
         int startUciHandler();
         void bufferCommands(std::string& commandStrings);
+        void pushToOutputBuffer(std::string& output);
+        void pushToOutputBufferAndWait(std::string& output);
+        uint32_t getCommandsCounterAndAdvance(){ return commandsCounter++;}
+        UCIHandeling(std::shared_ptr<Engine>);
+    public:
         bool isRunning;
         bool isDebugMode;
-        uint32_t getCommandsCounterAndAdvance(){ return commandsCounter++;}
-        UCIHandeling();
+        const std::string START_POSITION = "startpos";
+        const std::string FEN_POSITION = "fen";
+        std::shared_ptr<Engine> engine;
+    private:
+        void printBuffer();
     private:
         typedef struct UCICommandCompare
         {
@@ -34,7 +46,10 @@ class UCIHandeling
         std::vector<std::string> commandBuffer;
         std::unique_ptr<std::mutex> currentlyExecutingCommandsMutex;
         uint32_t commandsCounter;
-        
+        std::vector<std::string> outputBuffer;
+        std::unique_ptr<std::mutex> outputBufferMutex;
+        uint32_t outputBufferCounter;
+
 
 
 };
@@ -81,11 +96,12 @@ namespace NS_UCICommands {
         public:
             void execute();
             const UCICommandName command;
+            std::string commandParams;
             std::atomic<bool> isCommandExectuing;
             std::atomic<bool> isCommandStarted;
             std::shared_ptr<std::thread> worker;
-            UCICommand(UCIHandeling* instance,UCICommandName command,uint32_t commandTime) :
-             instance(instance),command(command),isCommandExectuing(false),isCommandStarted(false),worker(nullptr),commandTime(commandTime){};
+            UCICommand(UCIHandeling* instance,UCICommandName command,std::string params,uint32_t commandTime) :
+             instance(instance),command(command),commandParams(params),isCommandExectuing(false),isCommandStarted(false),worker(nullptr),commandTime(commandTime){};
 
             static bool isInteruptingCommand(UCICommandName command);
             uint32_t getCommandTime(){return this->commandTime;}
@@ -94,11 +110,15 @@ namespace NS_UCICommands {
             UCIHandeling* instance;
             void handleUCICommand();
             void handleIsReadyCommand();
+            void handleDebugCommand();
+            void handleStopCommand();
+            void handleQuitCommand();
             void handleSetOptionCommand();
             void handleUciNewGameCommand();
             void handlePositionCommand();
             void handleGoCommand();
             void handleUnknownCommand();
+            
     };
 
 

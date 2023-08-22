@@ -1,5 +1,6 @@
 #include "GameState.hpp"
 #include "Board.hpp"
+#include <cstdint>
 
 
 #define SHIFT_SIGN(color,pawns,num) (color == WHITE ? (pawns << num) : (pawns >> num))
@@ -48,13 +49,13 @@ std::shared_ptr<std::vector<moveInfo>> GameState::generateMove(PieceType p)
 {
     uint64_t piece_moves = 0;
     uint64_t pieces = m_board->getPieceBitBoard(p, m_playerToMove);
+    std::vector<std::pair<uint64_t,uint8_t>> allMoveBoards;
     auto pieceMovesLegalVec = std::make_shared<std::vector<moveInfo>>();
     
     while(pieces != 0)
     {             
         uint8_t square = std::__countr_zero(pieces);
         uint64_t piece = 1ull << square;
-        moveInfo move = {square,0,0,0,0,0};                           
         uint64_t pieceClipFileA = 0, pieceClipFileAB = 0, pieceClipFileH = 0, pieceClipFileGH = 0;
         if(!IS_SLIDING(p))
         {
@@ -111,7 +112,6 @@ std::shared_ptr<std::vector<moveInfo>> GameState::generateMove(PieceType p)
                     (pieceClipFileH << 1) | (pieceClipFileA >> 9) | (piece >> 8)          | (pieceClipFileH >> 7)
                 );
                 piece_moves = king_moves & ~m_board->getPiecesByColor(m_playerToMove);
-                move.castleInfo = m_playerToMove == WHITE ? 1: 1<<4; // Signefies that this is a king moved
                 break;
             }
             default:
@@ -122,7 +122,24 @@ std::shared_ptr<std::vector<moveInfo>> GameState::generateMove(PieceType p)
 
         if(!(piece_moves == 0))
         {
-            move.moveBoard = piece_moves;
+            allMoveBoards.push_back(std::pair<uint64_t,uint8_t>(piece_moves,square));
+        }
+    }
+    for(auto& [board,square] : allMoveBoards)
+    {
+        while(board !=0 )
+        {
+            uint8_t targetSquare = std::__countr_zero(board);
+
+            board &= ~(1ull << targetSquare);
+            moveInfo move = {0,0,0,0,0};
+            move.sourceSquare = square;
+            move.moveBoard = board;
+            move.targetSquare = targetSquare;
+            //TODO add promotion, castle implications
+            move.castleInfo = 0;
+            move.enPassantSquare = 0;
+            
             pieceMovesLegalVec->push_back(move);
         }
         
@@ -249,8 +266,8 @@ std::shared_ptr<GameState> GameState::playPly(uint8_t sourceSquare,uint8_t targe
         m_castleInfo |= move.castleInfo;
         move.moveBoard &= (1ull << targetSquare);
         move.targetSquare = targetSquare;
-        std::shared_ptr<Board>board = std::make_shared<Board>( new Board(m_board,move));
-        return std::make_shared<GameState>(new GameState(board,m_castleInfo,~m_playerToMove,move.enPassantSquare));
+        std::shared_ptr<Board>board = std::make_shared<Board>( m_board,move);
+        return std::make_shared<GameState>(board,m_castleInfo,~m_playerToMove,move.enPassantSquare);
     }
     return nullptr;
 }
@@ -262,6 +279,14 @@ void GameState::printGameState()
     std::cout << "Castle Info: " << (int)m_castleInfo << std::endl;
     std::cout << "En Passant Square: " << (int)m_enPassantSquare << std::endl;
 }
+GameState::GameState(std::string fen) : GameState()
+{
+    if(!fen.empty())
+    {
+        throw std::runtime_error("Not implemented");   
+    }
+}
+
 GameState::~GameState()
 {
     

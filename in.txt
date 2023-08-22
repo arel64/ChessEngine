@@ -1,2 +1,5 @@
 uci
-uci
+isready
+ucinewgame
+position startpos moves e2e4
+go wtime 300000 btime 300000 winc 0 binc 0
