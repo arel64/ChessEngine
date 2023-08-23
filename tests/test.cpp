@@ -128,8 +128,11 @@ TEST_CASE( "generalized several ply game", "[unit]" ) {
                     for(auto square : {B3,A3,D3,E3,F3,G3,H3,C1,C2,C4,C5,C6,C7,C8})
                     {
                         gameState = std::make_shared<GameState>(std::make_shared<Board>( 0,0,0,1ull << C3,0,0,0,0,0,0,0,0),0,WHITE,0); 
+                        INFO("ROOK MC for direction " << square  );
                         CHECK(single_piece_move_test(ROOK,WHITE, C3,square,gameState));
+                        
                         gameState  = std::make_shared<GameState>(std::make_shared<Board>( 0,0,0,1ull << C3,0,0,1ull << square,0,0,0,0,0),0,WHITE,0); 
+                        INFO("ROOK MC CAPTURE for direction " << square );
                         CHECK(single_piece_move_test_capture(ROOK,WHITE,PAWN,BLACK, C3,square,gameState));
                     }
                 }
@@ -152,8 +155,10 @@ TEST_CASE( "generalized several ply game", "[unit]" ) {
                     for(auto square : {A1,B2,D4,E5,F6,G7,H8,B4,A5,D2,E1})
                     {
                         gameState = std::make_shared<GameState>(std::make_shared<Board>( 0,0,1ull << C3,0,0,0,0,0,0,0,0,0),0,WHITE,0); 
+                        INFO("BISHOP MC for direction " << square  );
                         CHECK(single_piece_move_test(BISHOP,WHITE, C3,square,gameState));
                         gameState  = std::make_shared<GameState>(std::make_shared<Board>( 0,0,1ull << C3,0,0,0,1ull << square,0,0,0,0,0),0,WHITE,0); 
+                        INFO("BISHOP MC CAPTURE for direction " << square );
                         CHECK(single_piece_move_test_capture(BISHOP,WHITE,PAWN,BLACK, C3,square,gameState));
                     }
                 }
@@ -217,6 +222,7 @@ TEST_CASE( "generalized several ply game", "[unit]" ) {
                             break;
                         }
                     }
+                    INFO("ROOK INC for direction " << square << " passed " << passed );
                     CHECK(passed);
                 }
             }
@@ -241,6 +247,7 @@ TEST_CASE( "generalized several ply game", "[unit]" ) {
                             break;
                         }
                     }
+                    INFO("ROOK INC for direction " << square << " passed " << passed);
                     CHECK(passed);
                 }
             }

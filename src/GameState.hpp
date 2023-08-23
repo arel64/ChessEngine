@@ -17,6 +17,7 @@ class GameState
     std::shared_ptr<GameState> playPly(uint8_t sourceSquare,uint8_t targetSquare);
     uint64_t getPositiveRayAttack(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square,Directions direction);
     uint64_t getNegativeRayAttack(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square,Directions direction);
+    uint64_t getDiagonalAttack(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square,Directions direction);
     auto getMoveInfoVec(){return m_moveInfoVec;};
     auto getBoard(){return std::make_unique<Board>(m_board.get());};
     void printGameState();
@@ -25,10 +26,10 @@ class GameState
     GameState(std::string fen);
     GameState(std::shared_ptr<Board>,uint8_t castleInfo,Color playerToMove,uint16_t enPassantSquare);
     GameState(GameState const *gameState) : GameState(gameState->m_board, gameState->m_castleInfo, gameState->m_playerToMove, gameState->m_enPassantSquare) {}
-    GameState() : GameState(std::make_shared<Board>(new Board()),0,WHITE,0) {};        
+    GameState();        
     ~GameState();
   public:
-    inline static uint64_t RAY_ATTACKS[64][8];
+    inline static uint64_t RAY_ATTACKS[64][6];
 
   private:
 
@@ -57,6 +58,14 @@ class GameState
     uint64_t rookMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square); 
     uint64_t initRayAttacksForSquare(uint8_t square,int direction);
     uint64_t getRayAttack(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square,Directions direction,bool positive);
+
+    uint64_t generateNorthRay(int sq);
+    uint64_t generateSouthRay(int sq);
+    uint64_t generateEastRay(int sq);
+    uint64_t generateWestRay(int sq);
+    uint64_t generateDiagonalRay(int sq);
+    uint64_t generateAntiDiagonalRay(int sq);
+
     void     initRayAttacks();
 };
 #endif

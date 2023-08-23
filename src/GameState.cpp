@@ -1,4 +1,6 @@
 #include "GameState.hpp"
+#include "Board.hpp"
+#include <cstdint>
 
 std::shared_ptr<std::vector<moveInfo>> GameState::generateMoveInfoVec()
 {
@@ -122,19 +124,21 @@ std::shared_ptr<std::vector<moveInfo>> GameState::generateMove(PieceType p)
     }
     return pieceMovesLegalVec;
 }
-
+GameState::GameState(): GameState(std::make_shared<Board>(),0,WHITE,0)
+{}
 GameState::GameState(std::shared_ptr<Board>board,uint8_t castleInfo,Color playerToMove,uint16_t enPassantSquare)
 {
-    m_castleInfo = castleInfo;
-    m_playerToMove = playerToMove;
-    m_enPassantSquare = enPassantSquare;
-    m_board = board;
-    m_moveInfoVec = generateMoveInfoVec();
     if(!GameState::isRayAttacksInitialized)
     {
         GameState::isRayAttacksInitialized = true;
         initRayAttacks();
     }
+    m_castleInfo = castleInfo;
+    m_playerToMove = playerToMove;
+    m_enPassantSquare = enPassantSquare;
+    m_board = board;
+    m_moveInfoVec = generateMoveInfoVec();
+    
 }
 void GameState::initRayAttacks()
 {
@@ -143,46 +147,17 @@ void GameState::initRayAttacks()
         It has no real impact on preformace so I will not worry about it for now.
     */
     for (int i = 0; i < BOARD_SIZE; ++i) {
-        for(int k = 0 ; k<8 ; ++k)
-        {
-            uint64_t rayValue = initRayAttacksForSquare(i,k);
-            GameState::RAY_ATTACKS[i][k] = rayValue;
-        }       
-        
-        
-    }
-}
-uint64_t GameState::initRayAttacksForSquare(uint8_t square,int direction)
-{
-    // Calculate the row and column offsets for the current direction
-    const uint64_t one = 1;
-    uint64_t rayValue = 0;
-    int rowOffset = 0;
-    int colOffset = 0;
-    switch (direction) {
-        case NORTH_WEST:    rowOffset = -1; colOffset = -1; break; // NW
-        case NORTH:         rowOffset = -1; colOffset =  0; break; // N
-        case NORTH_EAST:    rowOffset = -1; colOffset =  1; break; // NE
-        case WEST:          rowOffset =  0; colOffset = -1; break; // W
-        case EAST:          rowOffset =  0; colOffset =  1; break; // E
-        case SOUTH_WEST:    rowOffset =  1; colOffset = -1; break; // SW
-        case SOUTH:         rowOffset =  1; colOffset =  0; break; // S
-        case SOUTH_EAST:    rowOffset =  1; colOffset =  1; break; // SE
-    }
+            GameState::RAY_ATTACKS[i][NORTH] = generateNorthRay(i);
+            GameState::RAY_ATTACKS[i][SOUTH] = generateSouthRay(i);
+            GameState::RAY_ATTACKS[i][EAST] = generateEastRay(i);
+            GameState::RAY_ATTACKS[i][WEST] = generateWestRay(i);
+            GameState::RAY_ATTACKS[i][DIAGONAL] = generateDiagonalRay(i);
+            GameState::RAY_ATTACKS[i][ANTI_DIAGONAL] = generateAntiDiagonalRay(i);
 
-    int currentRow = square/BOARD_DIM + rowOffset;
-    int currentCol = square%BOARD_DIM + colOffset;
-    while (currentRow >= 0 && currentRow < BOARD_DIM && currentCol >= 0 && currentCol < BOARD_DIM) {
-        // Set the bit for the current square in the ray value
-        rayValue |= (one << (currentRow * BOARD_DIM + currentCol));
-        
-        // Move to the next square in the current direction
-        currentRow += rowOffset;
-        currentCol += colOffset;
     }
-
-    return rayValue;
+  
 }
+
 uint64_t GameState::getNegativeRayAttack(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square, Directions direction)
 {
     return getRayAttack( blockingInc, blockingExclude, square,direction,false);
@@ -192,6 +167,27 @@ uint64_t GameState::getPositiveRayAttack(uint64_t blockingInc,uint64_t blockingE
 {
     return getRayAttack( blockingInc, blockingExclude, square,direction,true);
 }
+uint64_t GameState::getDiagonalAttack(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square, Directions direction)
+{
+    uint64_t rayValue = GameState::RAY_ATTACKS[square][direction] ^ (1ull << square);
+    uint64_t blocking = (rayValue & (blockingInc | blockingExclude));
+    if(blocking)
+    {
+        uint8_t blockingSquare;
+        if(direction == DIAGONAL)
+        {
+            blockingSquare = std::__countr_zero(blocking);
+        }
+        else
+        {
+            blockingSquare = std::__countr_zero(blocking);
+            //blockingSquare= std::__countl_zero(blocking);
+        }
+        rayValue ^= (GameState::RAY_ATTACKS[blockingSquare][direction] ^ (1ull << blockingSquare));
+        rayValue = rayValue ^ (rayValue & blockingExclude);
+    }
+    return rayValue;
+}
 uint64_t GameState::getRayAttack(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square, Directions direction,bool positive)
 {
     uint64_t rayValue = GameState::RAY_ATTACKS[square][direction];
@@ -200,11 +196,13 @@ uint64_t GameState::getRayAttack(uint64_t blockingInc,uint64_t blockingExclude,u
     {
         if(positive)
         {
-            square = std::__countl_zero(blocking);
+            square = std::__countr_zero(blocking);
         }
         else
         {
+            ///square = std::__countl_zero(blocking);
             square = std::__countr_zero(blocking);
+
         }
         rayValue ^= GameState::RAY_ATTACKS[square][direction];
         rayValue = rayValue ^ (rayValue & blockingExclude);
@@ -262,10 +260,9 @@ GameState::GameState(std::string fen) : GameState()
 uint64_t GameState::bishopMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square) 
 { 
     uint64_t bishopMoves = 0; 
-    bishopMoves |= getPositiveRayAttack(blockingInc,blockingExclude,square, NORTH_WEST); 
-    bishopMoves |= getPositiveRayAttack(blockingInc,blockingExclude,square, NORTH_EAST); 
-    bishopMoves |= getNegativeRayAttack(blockingInc,blockingExclude,square, SOUTH_EAST); 
-    bishopMoves |= getNegativeRayAttack(blockingInc,blockingExclude,square, SOUTH_WEST); 
+    bishopMoves |= getDiagonalAttack(blockingInc,blockingExclude,square, DIAGONAL); 
+    bishopMoves |= getDiagonalAttack(blockingInc,blockingExclude,square, ANTI_DIAGONAL); 
+
     return bishopMoves; 
 }
 uint64_t GameState::rookMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square) \
@@ -276,6 +273,35 @@ uint64_t GameState::rookMove(uint64_t blockingInc,uint64_t blockingExclude,uint8
     rookMoves |= getNegativeRayAttack(blockingInc,blockingExclude,square, SOUTH); 
     rookMoves |= getNegativeRayAttack(blockingInc,blockingExclude,square, WEST); 
     return rookMoves; 
+}
+uint64_t GameState::generateNorthRay(int sq) {
+    return 0x0101010101010100ULL << sq;
+}
+
+uint64_t GameState::generateSouthRay(int sq) {
+    return 0x0080808080808080ULL >> (63 - sq);
+}
+
+uint64_t GameState::generateEastRay(int sq) {
+    const uint64_t one = 1;
+    return 2*( (one << (sq|7)) - (one << sq) );
+}
+
+uint64_t GameState::generateWestRay(int sq) {
+    const uint64_t one = 1;
+    return (one << sq) - (one << (sq&56));
+}
+
+uint64_t GameState::generateDiagonalRay(int sq) {
+   const uint64_t maindia = (0x8040201008040201);
+   int diag  = (sq&7) - (sq>>3);
+   return diag >= 0 ? maindia >> diag*8 : maindia << -diag*8;
+}
+
+uint64_t GameState::generateAntiDiagonalRay(int sq) {
+   const uint64_t maindia = (0x0102040810204080);
+   int diag  = 7 - (sq&7) - (sq>>3);
+   return diag >= 0 ? maindia >> diag*8 : maindia << -diag*8;
 }
 GameState::~GameState()
 {

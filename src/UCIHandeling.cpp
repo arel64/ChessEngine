@@ -21,7 +21,7 @@ bool UCIHandeling::UCICommandCompare::UCICommandCompare::operator()(const std::s
     bool interputing_rhs = NS_UCICommands::UCICommand::isInteruptingCommand(rhs->command);
     if(interputing_lhs && interputing_rhs)
     {
-        return NS_UCICommands::UCIInteruptingCommandsPriority.at(lhs->command) < NS_UCICommands::UCIInteruptingCommandsPriority.at(rhs->command);
+        return NS_UCICommands::UCIInteruptingCommandsPriority.at(lhs->command) > NS_UCICommands::UCIInteruptingCommandsPriority.at(rhs->command);
     }
     else if(interputing_lhs)
     {
@@ -33,7 +33,7 @@ bool UCIHandeling::UCICommandCompare::UCICommandCompare::operator()(const std::s
     }
     else
     {
-        return lhs->getCommandTime() < rhs->getCommandTime();
+        return lhs->getCommandTime()>  rhs->getCommandTime();
     }
 }
 int UCIHandeling::startUciHandler()
