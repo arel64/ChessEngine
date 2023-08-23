@@ -1,28 +1,5 @@
 #include "GameState.hpp"
-#include "Board.hpp"
-#include <cstdint>
 
-
-#define SHIFT_SIGN(color,pawns,num) (color == WHITE ? (pawns << num) : (pawns >> num))
-#define BISHOP_MOVE(square) \
-    ({ \
-        uint64_t bishop_moves = 0; \
-        bishop_moves |= getPositiveRayAttack(square, NORTH_WEST); \
-        bishop_moves |= getPositiveRayAttack(square, NORTH_EAST); \
-        bishop_moves |= getNegativeRayAttack(square, SOUTH_EAST); \
-        bishop_moves |= getNegativeRayAttack(square, SOUTH_WEST); \
-        bishop_moves; \
-    })
-#define ROOK_MOVE(square) \
-    ({ \
-        uint64_t rook_moves = 0; \
-        rook_moves |= getPositiveRayAttack(square, NORTH); \
-        rook_moves |= getPositiveRayAttack(square, EAST); \
-        rook_moves |= getNegativeRayAttack(square, SOUTH); \
-        rook_moves |= getNegativeRayAttack(square, WEST); \
-        rook_moves; \
-    })
-#define IS_SLIDING(piece) (piece == BISHOP || piece == ROOK || piece == QUEEN)
 std::shared_ptr<std::vector<moveInfo>> GameState::generateMoveInfoVec()
 {
     
@@ -67,14 +44,14 @@ std::shared_ptr<std::vector<moveInfo>> GameState::generateMove(PieceType p)
         
         switch (p) {
             case BISHOP:
-                piece_moves |= BISHOP_MOVE(square);
+                piece_moves |= bishopMove(this->getBoard()->getPiecesByColor(~m_playerToMove),this->getBoard()->getPiecesByColor(m_playerToMove),square);
                 break;
             case ROOK:
-                piece_moves |= ROOK_MOVE(square);
+                piece_moves |= rookMove(this->getBoard()->getPiecesByColor(~m_playerToMove),this->getBoard()->getPiecesByColor(m_playerToMove),square);
                 break;
             case QUEEN:
-                piece_moves |= BISHOP_MOVE(square);
-                piece_moves |= ROOK_MOVE(square);
+                piece_moves |= bishopMove(this->getBoard()->getPiecesByColor(~m_playerToMove),this->getBoard()->getPiecesByColor(m_playerToMove),square);
+                piece_moves |= rookMove(this->getBoard()->getPiecesByColor(~m_playerToMove),this->getBoard()->getPiecesByColor(m_playerToMove),square);
                 break;
             case PAWN:{
                 uint64_t pawnOneStep = (SHIFT_SIGN(m_playerToMove,piece,8));
@@ -131,15 +108,14 @@ std::shared_ptr<std::vector<moveInfo>> GameState::generateMove(PieceType p)
         {
             uint8_t targetSquare = std::__countr_zero(board);
 
-            board &= ~(1ull << targetSquare);
             moveInfo move = {0,0,0,0,0};
             move.sourceSquare = square;
-            move.moveBoard = board;
+            move.moveBoard = board & (1ull << targetSquare);
             move.targetSquare = targetSquare;
             //TODO add promotion, castle implications
             move.castleInfo = 0;
             move.enPassantSquare = 0;
-            
+            board &= ~(1ull << targetSquare);
             pieceMovesLegalVec->push_back(move);
         }
         
@@ -207,34 +183,31 @@ uint64_t GameState::initRayAttacksForSquare(uint8_t square,int direction)
 
     return rayValue;
 }
-uint64_t GameState::getNegativeRayAttack(uint8_t square, Directions direction)
+uint64_t GameState::getNegativeRayAttack(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square, Directions direction)
 {
-    return getRayAttack(false, square,direction);
+    return getRayAttack( blockingInc, blockingExclude, square,direction,false);
 }
 
-uint64_t GameState::getPositiveRayAttack(uint8_t square, Directions direction)
+uint64_t GameState::getPositiveRayAttack(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square, Directions direction)
 {
-    return getRayAttack(true, square,direction);
+    return getRayAttack( blockingInc, blockingExclude, square,direction,true);
 }
-uint64_t GameState::getRayAttack(bool positive,uint8_t square, Directions direction)
+uint64_t GameState::getRayAttack(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square, Directions direction,bool positive)
 {
     uint64_t rayValue = GameState::RAY_ATTACKS[square][direction];
-    uint64_t blocking = rayValue & m_board.get()->getPiecesByColor(ALL);
+    uint64_t blocking = rayValue & (blockingInc | blockingExclude);
     if(blocking)
     {
         if(positive)
         {
-            square = std::__countr_zero(blocking);
+            square = std::__countl_zero(blocking);
         }
         else
         {
-            /*
-                This isn't supposed to work! note that it will probably break
-            */
             square = std::__countr_zero(blocking);
-            //square = std::__countl_zero(blocking);
         }
         rayValue ^= GameState::RAY_ATTACKS[square][direction];
+        rayValue = rayValue ^ (rayValue & blockingExclude);
     }
     return rayValue;
 }
@@ -261,7 +234,7 @@ std::shared_ptr<GameState> GameState::playPly(uint8_t sourceSquare,uint8_t targe
             /*
                 Piece in location is not able to move to target location
             */
-            return nullptr;
+            continue;
         }
         m_castleInfo |= move.castleInfo;
         move.moveBoard &= (1ull << targetSquare);
@@ -286,7 +259,24 @@ GameState::GameState(std::string fen) : GameState()
         throw std::runtime_error("Not implemented");   
     }
 }
-
+uint64_t GameState::bishopMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square) 
+{ 
+    uint64_t bishopMoves = 0; 
+    bishopMoves |= getPositiveRayAttack(blockingInc,blockingExclude,square, NORTH_WEST); 
+    bishopMoves |= getPositiveRayAttack(blockingInc,blockingExclude,square, NORTH_EAST); 
+    bishopMoves |= getNegativeRayAttack(blockingInc,blockingExclude,square, SOUTH_EAST); 
+    bishopMoves |= getNegativeRayAttack(blockingInc,blockingExclude,square, SOUTH_WEST); 
+    return bishopMoves; 
+}
+uint64_t GameState::rookMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square) \
+{ 
+    uint64_t rookMoves = 0; \
+    rookMoves |= getPositiveRayAttack(blockingInc,blockingExclude,square, NORTH); 
+    rookMoves |= getPositiveRayAttack(blockingInc,blockingExclude,square, EAST); 
+    rookMoves |= getNegativeRayAttack(blockingInc,blockingExclude,square, SOUTH); 
+    rookMoves |= getNegativeRayAttack(blockingInc,blockingExclude,square, WEST); 
+    return rookMoves; 
+}
 GameState::~GameState()
 {
     
