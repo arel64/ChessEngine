@@ -57,24 +57,14 @@ std::shared_ptr<std::vector<std::pair<uint64_t,uint8_t>>>GameState::generateMove
                 piece_moves |= rookMove(playerToMoveColoredPiecesBitboard,otherPlayerColoredPiecesBitboard,square);
                 break;
             case PAWN:
-                piece_moves |=pawnMove(piece, pieceClipFileA, pieceClipFileH, piece_moves);
+                piece_moves |= pawnMove(piece, pieceClipFileA, pieceClipFileH);
                 break;
             case KNIGHT:
-            {
-                piece_moves= (
-                    (pieceClipFileAB << 6) | (pieceClipFileA << 15) | (pieceClipFileH << 17) | (pieceClipFileGH << 10) |
-                    (pieceClipFileGH >> 6) | (pieceClipFileH >> 15) | (pieceClipFileA >> 17) | (pieceClipFileAB >> 10)
-                );
-                piece_moves = piece_moves & ~m_board->getPiecesByColor(m_playerToMove);;
+                piece_moves |= knightMove(piece_moves, pieceClipFileAB, pieceClipFileA, pieceClipFileH, pieceClipFileGH);
                 break;
-            }
             case KING:
             {
-                uint64_t king_moves = (
-                    (pieceClipFileA << 7) | (piece << 8)          | (pieceClipFileH << 9) | (pieceClipFileA >> 1) |
-                    (pieceClipFileH << 1) | (pieceClipFileA >> 9) | (piece >> 8)          | (pieceClipFileH >> 7)
-                );
-                piece_moves = king_moves & ~m_board->getPiecesByColor(m_playerToMove);
+                piece_moves |= kingMove(pieceClipFileA, piece, pieceClipFileH);
                 break;
             }
             default:
@@ -91,7 +81,21 @@ std::shared_ptr<std::vector<std::pair<uint64_t,uint8_t>>>GameState::generateMove
     return allMoveBoards;
 }
 
-uint64_t GameState::PawnMove(uint64_t &piece, uint64_t &pieceClipFileA, uint64_t &pieceClipFileH, uint64_t &piece_moves)
+uint64_t GameState::kingMove(uint64_t pieceClipFileA, uint64_t piece, uint64_t pieceClipFileH)
+{
+    uint64_t king_moves = ((pieceClipFileA << 7) | (piece << 8) | (pieceClipFileH << 9) | (pieceClipFileA >> 1) |
+                           (pieceClipFileH << 1) | (pieceClipFileA >> 9) | (piece >> 8) | (pieceClipFileH >> 7));
+    return king_moves & ~m_board->getPiecesByColor(m_playerToMove);
+}
+
+uint64_t GameState::knightMove(uint64_t &piece_moves, uint64_t pieceClipFileAB, uint64_t pieceClipFileA, uint64_t pieceClipFileH, uint64_t pieceClipFileGH)
+{
+    piece_moves = ((pieceClipFileAB << 6) | (pieceClipFileA << 15) | (pieceClipFileH << 17) | (pieceClipFileGH << 10) |
+                    (pieceClipFileGH >> 6) | (pieceClipFileH >> 15) | (pieceClipFileA >> 17) | (pieceClipFileAB >> 10));
+    return  piece_moves & ~m_board->getPiecesByColor(m_playerToMove);
+}
+
+uint64_t GameState::pawnMove(uint64_t &piece, uint64_t &pieceClipFileA, uint64_t &pieceClipFileH)
 {
     uint64_t pawnOneStep = (SHIFT_SIGN(m_playerToMove, piece, 8));
     uint64_t pawnTwoStep = 0;
@@ -197,14 +201,86 @@ GameState::GameState(std::string fen) : GameState()
 }
 uint64_t GameState::bishopMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square) 
 { 
-    uint64_t bishopMoves = 0; 
+    uint64_t bishopMoves = 0;
+    bool directions[4] = {false,false,false,false};
+    for(int i=1; i < BOARD_DIM ; i++)
+    {
+        uint8_t northWestSquare = (square + BOARD_DIM - 1);
+        uint8_t northEastSquare = (square + BOARD_DIM + 1);
+        uint8_t southWestSquare = (square - BOARD_DIM - 1);
+        uint8_t southEastSquare = (square - BOARD_DIM + 1);
 
+        uint64_t northWestSquareBitBoard = (1ull << northWestSquare);
+        uint64_t northEastSquareBitBoard = (1ull << northEastSquare);
+        uint64_t southWestSquareBitBoard = (1ull << southWestSquare);
+        uint64_t southEastBitBoard = (1ull << southEastSquare);
+    //todo fix 
+        if(!directions[0] && northWestSquare < BOARD_DIM*BOARD_DIM)
+        {
+            bishopMoves |= directionSquareUpdate(bishopMoves,blockingInc,blockingExclude,northWestSquareBitBoard,directions);
+        }
+        if(!directions[1] && northEastSquare < BOARD_DIM*BOARD_DIM)
+        {
+            bishopMoves |= directionSquareUpdate(bishopMoves,blockingInc,blockingExclude,northEastSquareBitBoard,directions);
+        }
+        if(!directions[2] && southWestSquare < BOARD_DIM*BOARD_DIM)
+        {
+            bishopMoves |= directionSquareUpdate(bishopMoves,blockingInc,blockingExclude,southWestSquareBitBoard,directions);
+        }
+        if(!directions[3] && southEastSquare < BOARD_DIM*BOARD_DIM)
+        {
+            bishopMoves |= directionSquareUpdate(bishopMoves,blockingInc,blockingExclude,southEastBitBoard,directions);
+        }
+    }
     return bishopMoves; 
+}
+uint64_t GameState::directionSquareUpdate(uint64_t currentMoves, uint64_t blockingInc, uint64_t blockingExclude, uint64_t squareBitboard, bool directions[4])
+{
+    if ((squareBitboard & blockingExclude) != 0)
+    {
+        directions[0] = true;
+        return currentMoves;
+    }
+    if ((squareBitboard & blockingInc) != 0)
+    {
+        directions[0] = true;
+        return currentMoves | squareBitboard;
+    }
+    return currentMoves | squareBitboard;
 }
 uint64_t GameState::rookMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square) 
 { 
     uint64_t rookMoves = 0; 
-    
+    bool directions[4] = {false,false,false,false};
+    for(int i=1; i < BOARD_DIM ; i++)
+    {
+        uint8_t northSquare = (square + BOARD_DIM*i);
+        uint8_t southSquare = (square - BOARD_DIM*i);
+        uint8_t eastSquare = (square + 1);
+        uint8_t westSquare = (square -1 );
+
+        uint64_t northSquareBitboard = (1ull << northSquare);
+        uint64_t southSquareBitboard = (1ull << southSquare);
+        uint64_t eastSquareBitboard = (1ull << eastSquare);
+        uint64_t westSquareBitboard = (1ull << westSquare);
+
+        if(!directions[0] && square < BOARD_DIM*BOARD_DIM - BOARD_DIM)
+        {
+            rookMoves |= directionSquareUpdate(rookMoves,blockingInc,blockingExclude,northSquareBitboard,directions);
+        }
+        if(!directions[1] && square >= BOARD_DIM)
+        {
+            rookMoves |= directionSquareUpdate(rookMoves,blockingInc,blockingExclude,southSquareBitboard,directions);
+        }
+        if(!directions[2] && square % BOARD_DIM != BOARD_DIM - 1)
+        {
+            rookMoves |= directionSquareUpdate(rookMoves,blockingInc,blockingExclude,eastSquareBitboard,directions);
+        }
+        if(!directions[3] && square % BOARD_DIM != 0)
+        {
+            rookMoves |= directionSquareUpdate(rookMoves,blockingInc,blockingExclude,westSquareBitboard,directions);
+        }
+    }
     return rookMoves; 
 }
 GameState::~GameState()

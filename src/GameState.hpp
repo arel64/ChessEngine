@@ -56,6 +56,10 @@ class GameState
     std::shared_ptr<std::vector<moveInfo>> generateMoveInfoVec();
     uint64_t bishopMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square); 
     uint64_t rookMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square); 
-    void pawnMove(uint64_t &piece, uint64_t &pieceClipFileA, uint64_t &pieceClipFileH, uint64_t &piece_moves);
+    uint64_t pawnMove(uint64_t &piece, uint64_t &pieceClipFileA, uint64_t &pieceClipFileH);
+    uint64_t knightMove(uint64_t &piece_moves, uint64_t pieceClipFileAB, uint64_t pieceClipFileA, uint64_t pieceClipFileH, uint64_t pieceClipFileGH);
+    uint64_t kingMove(uint64_t pieceClipFileA, uint64_t piece, uint64_t pieceClipFileH);
+    uint64_t directionSquareUpdate(uint64_t currentMoves, uint64_t blockingInc, uint64_t blockingExclude, uint64_t squareBitboard, bool directions[4]);
+
 };
 #endif
