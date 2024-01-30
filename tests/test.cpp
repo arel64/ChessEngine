@@ -135,6 +135,13 @@ TEST_CASE( "generalized several ply game", "[unit]" ) {
                         INFO("ROOK MC CAPTURE for direction " << square );
                         CHECK(single_piece_move_test_capture(ROOK,WHITE,PAWN,BLACK, C3,square,gameState));
                     }
+                    uint64_t square = (1ull<<D4);
+                    INFO("Exact white rook capture open board" <<  square);
+                    gameState  = std::make_shared<GameState>(std::make_shared<Board>( 0,0,0,square,0,0,0,0,0,0,0,0),0,WHITE,0); 
+                    auto moves = gameState->generateMoveBitBoard(ROOK);
+                    CHECK(moves->size() == 1);
+                    CHECK(moves->at(0).first == 0x8080808f7080808);
+                    
                 }
                 SECTION( "black rook movement and capture" )
                 {
@@ -160,7 +167,12 @@ TEST_CASE( "generalized several ply game", "[unit]" ) {
                         gameState  = std::make_shared<GameState>(std::make_shared<Board>( 0,0,1ull << C3,0,0,0,1ull << square,0,0,0,0,0),0,WHITE,0); 
                         INFO("BISHOP MC CAPTURE for direction " << square );
                         CHECK(single_piece_move_test_capture(BISHOP,WHITE,PAWN,BLACK, C3,square,gameState));
+                        
                     }
+                    gameState  = std::make_shared<GameState>(std::make_shared<Board>( 0,0,1ull<D4,0,0,0,0,0,0,0,0,0),0,WHITE,0); 
+                    auto moves = gameState->generateMoveBitBoard(BISHOP);
+                    CHECK(moves->size() == 1);
+                    CHECK(moves->at(0).first == 0x8080808f7080808);
                 }
                 SECTION( "black bishop movement and capture" )
                 {

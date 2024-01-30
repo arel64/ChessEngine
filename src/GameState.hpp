@@ -22,9 +22,9 @@ class GameState
     auto getBoard(){return std::make_unique<Board>(m_board.get());};
     void printGameState();
     std::shared_ptr<std::vector<moveInfo>> generateMove(PieceType p);
-
+    std::shared_ptr<std::vector<std::pair<uint64_t,uint8_t>>>generateMoveBitBoard(PieceType p);
     GameState(std::string fen);
-    GameState(std::shared_ptr<Board>,uint8_t castleInfo,Color playerToMove,uint16_t enPassantSquare);
+    GameState(std::shared_ptr<Board>, uint8_t castleInfo, Color playerToMove, uint16_t enPassantSquare);
     GameState(GameState const *gameState) : GameState(gameState->m_board, gameState->m_castleInfo, gameState->m_playerToMove, gameState->m_enPassantSquare) {}
     GameState();        
     ~GameState();
@@ -56,16 +56,6 @@ class GameState
     std::shared_ptr<std::vector<moveInfo>> generateMoveInfoVec();
     uint64_t bishopMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square); 
     uint64_t rookMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square); 
-    uint64_t initRayAttacksForSquare(uint8_t square,int direction);
-    uint64_t getRayAttack(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square,Directions direction,bool positive);
-
-    uint64_t generateNorthRay(int sq);
-    uint64_t generateSouthRay(int sq);
-    uint64_t generateEastRay(int sq);
-    uint64_t generateWestRay(int sq);
-    uint64_t generateDiagonalRay(int sq);
-    uint64_t generateAntiDiagonalRay(int sq);
-
-    void     initRayAttacks();
+    void pawnMove(uint64_t &piece, uint64_t &pieceClipFileA, uint64_t &pieceClipFileH, uint64_t &piece_moves);
 };
 #endif
