@@ -115,10 +115,10 @@ uint64_t GameState::pawnMove(uint64_t &piece, uint64_t &pieceClipFileA, uint64_t
     return validAttacks | validMoves;
 }
 
-std::shared_ptr<std::vector<moveInfo>> GameState::generateMove(PieceType p)
+std::shared_ptr<std::vector<moveInfo>> GameState::generateMove(PieceType pieceType)
 {
     auto pieceMovesLegalVec = std::make_shared<std::vector<moveInfo>>();
-    auto allMoveBoards = generateMoveBitBoard(p);
+    auto allMoveBoards = generateMoveBitBoard(pieceType);
     for(auto& [board,square] : *allMoveBoards)
     {
         while(board !=0 )
@@ -256,29 +256,59 @@ uint64_t GameState::rookMove(uint64_t blockingInc,uint64_t blockingExclude,uint8
     {
         uint8_t northSquare = (square + BOARD_DIM*i);
         uint8_t southSquare = (square - BOARD_DIM*i);
-        uint8_t eastSquare = (square + 1);
-        uint8_t westSquare = (square -1 );
+        uint8_t eastSquare = (square + i);
+        uint8_t westSquare = (square - i);
 
         uint64_t northSquareBitboard = (1ull << northSquare);
         uint64_t southSquareBitboard = (1ull << southSquare);
         uint64_t eastSquareBitboard = (1ull << eastSquare);
         uint64_t westSquareBitboard = (1ull << westSquare);
 
-        if(!directions[0] && square < BOARD_DIM*BOARD_DIM - BOARD_DIM)
+        if(!directions[0])
         {
-            rookMoves |= directionSquareUpdate(rookMoves,blockingInc,blockingExclude,northSquareBitboard,directions);
+            if(!Board::isSquareWithinBoard(northSquare))
+            {
+               directions[0] = true; 
+            }
+            else
+            {
+                rookMoves |= directionSquareUpdate(rookMoves,blockingInc,blockingExclude,northSquareBitboard,directions);
+            }
+            
         }
-        if(!directions[1] && square >= BOARD_DIM)
+        if(!directions[1])
         {
-            rookMoves |= directionSquareUpdate(rookMoves,blockingInc,blockingExclude,southSquareBitboard,directions);
+            if(!Board::isSquareWithinBoard(southSquare))
+            {
+                directions[1] = true;
+            }
+            else
+            {
+                rookMoves |= directionSquareUpdate(rookMoves,blockingInc,blockingExclude,southSquareBitboard,directions);
+            }
+            
         }
-        if(!directions[2] && square % BOARD_DIM != BOARD_DIM - 1)
+        if(!directions[2])
         {
-            rookMoves |= directionSquareUpdate(rookMoves,blockingInc,blockingExclude,eastSquareBitboard,directions);
+            if(!Board::isSquaresWithinSameRow(eastSquare,square))
+            {
+                directions[2] = true;
+            }
+            else
+            {
+                rookMoves |= directionSquareUpdate(rookMoves,blockingInc,blockingExclude,eastSquareBitboard,directions);
+            }
         }
-        if(!directions[3] && square % BOARD_DIM != 0)
+        if(!directions[3])
         {
-            rookMoves |= directionSquareUpdate(rookMoves,blockingInc,blockingExclude,westSquareBitboard,directions);
+            if(!Board::isSquaresWithinSameRow(westSquare,square))
+            {
+                directions[3] = true;
+            }
+            else
+            {
+                rookMoves |= directionSquareUpdate(rookMoves,blockingInc,blockingExclude,westSquareBitboard,directions);
+            }
         }
     }
     return rookMoves; 

@@ -42,7 +42,7 @@
         DIAGONAL,
         ANTI_DIAGONAL,
     };
-    enum RANKS
+    enum BoardRank
     {
         RANK_1 = 0,
         RANK_2,
@@ -53,7 +53,7 @@
         RANK_7,
         RANK_8
     };
-    enum FILES
+    enum BoardFile
     {
         FILE_A = 0,
         FILE_B,
@@ -66,7 +66,7 @@
     };
     //Little-Endian Rank-File Mapping
 
-    enum SQUARES
+    enum BoardSquare
     {
         A1=0, B1, C1, D1, E1, F1, G1, H1,
         A2, B2, C2, D2, E2, F2, G2, H2,
@@ -156,6 +156,9 @@
                     return ALL_PIECES;
                 }
             }}
+            static bool isSquaresWithinSameRow(uint8_t square1,uint8_t square2);
+            static bool isSquareWithinBoard(uint8_t square);
+            static bool isSquareOnRank(uint8_t square,BoardRank rank);
         private:
 
 

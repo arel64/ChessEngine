@@ -315,3 +315,27 @@ Board::Board(std::shared_ptr<Board>board,moveInfo move)
                                         m_blackPawns,m_blackKnights,m_blackBishops,m_blackRooks,m_blackQueens,m_blackKing};*/
 
 }
+bool Board::isSquareWithinBoard(uint8_t square)
+{
+    if(square >= BOARD_DIM*BOARD_DIM || square < 0)
+    {
+        return false;
+    }
+    return true;
+}
+bool Board::isSquaresWithinSameRow(uint8_t square1,uint8_t square2)
+{
+    if(square1 / BOARD_DIM == square2 / BOARD_DIM)
+    {
+        return true;
+    }
+    return false;
+}
+bool Board::isSquareOnRank(uint8_t square,BoardRank rank)
+{
+    if(square / BOARD_DIM == rank)
+    {
+        return true;
+    }
+    return false;
+}

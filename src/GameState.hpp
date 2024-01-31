@@ -15,11 +15,8 @@ class GameState
 {
   public:
     std::shared_ptr<GameState> playPly(uint8_t sourceSquare,uint8_t targetSquare);
-    uint64_t getPositiveRayAttack(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square,Directions direction);
-    uint64_t getNegativeRayAttack(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square,Directions direction);
-    uint64_t getDiagonalAttack(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square,Directions direction);
     auto getMoveInfoVec(){return m_moveInfoVec;};
-    auto getBoard(){return std::make_unique<Board>(m_board.get());};
+    auto getBoard(){return m_board;};
     void printGameState();
     std::shared_ptr<std::vector<moveInfo>> generateMove(PieceType p);
     std::shared_ptr<std::vector<std::pair<uint64_t,uint8_t>>>generateMoveBitBoard(PieceType p);
@@ -29,7 +26,6 @@ class GameState
     GameState();        
     ~GameState();
   public:
-    inline static uint64_t RAY_ATTACKS[64][6];
 
   private:
 
@@ -44,13 +40,7 @@ class GameState
 
 
     Color m_playerToMove;
-    
-    /*
-        TODO:: To be implemented
-    */
     uint16_t m_enPassantSquare;
-
-    inline static bool isRayAttacksInitialized;
 
   private:
     std::shared_ptr<std::vector<moveInfo>> generateMoveInfoVec();
