@@ -13,7 +13,7 @@ bool get_bitboard_before_and_after_ply(
     {
         return false;    
     }
-    auto state =  gameState.playPly(source_square,target_square); 
+    auto state =  .playPly(source_square,target_square); 
     if(state==nullptr)
     {
         return false;
@@ -100,28 +100,28 @@ TEST_CASE( "Non Sliding Pieces Movement", "[unit]" ) {
                 }
                 
                 std::shared_ptr board = std::make_shared<Board>(singlePawnBitboard ,0,0,0,0,0,flankPawnsForCaptureBitboard,0,0,0,0,0);
+                GameState gameState = GameState(board,0,playerToMove,0);
                 INFO("Checking white pawn movement for board square" << square  );
                 if(Board::isSquareWithinBoard(onePawnMoveForwardSquare))
                 {
                     currentPawnValidSquaredToMove[onePawnMoveForwardSquare] = true;
-                    GameState gameState = GameState(board,0,playerToMove,0);
                     CHECK(single_piece_move_test(PAWN,WHITE, square, onePawnMoveForwardSquare,gameState));
                 }
                 if(Board::isSquareOnRank(square,BoardRank::RANK_2))
                 {
                     currentPawnValidSquaredToMove[twoPawnMoveForwardSquare] = true;
-                    GameState gameState  = GameState(board,0,WHITE,0);
+                    
                     CHECK(single_piece_move_test(PAWN,WHITE, square, twoPawnMoveForwardSquare,gameState));
                 }
                 if(Board::isSquareWithinBoard(leftFlankPawnSquare))
                 {
-                    GameState gameState  = GameState(board,0,WHITE,0);
+                    
                     currentPawnValidSquaredToMove[leftFlankPawnSquare] = true;
                     CHECK(single_piece_move_test_capture(PAWN,WHITE,square,leftFlankPawnSquare,gameState));
                 }
                 if(Board::isSquareWithinBoard(rightFlankPawnSquare))
                 {
-                    GameState gameState  = GameState(board,0,WHITE,0);
+                    
                     currentPawnValidSquaredToMove[rightFlankPawnSquare] = true;
                     CHECK(single_piece_move_test_capture(PAWN,WHITE,square,rightFlankPawnSquare,gameState));
                 }
@@ -129,7 +129,7 @@ TEST_CASE( "Non Sliding Pieces Movement", "[unit]" ) {
                 {
                     if(!currentPawnValidSquaredToMove[i])
                     {
-                        GameState gameState  = GameState(board,0,WHITE,0);
+                        
                         CHECK(!single_piece_move_test(PAWN,WHITE,square,i,gameState));
                     }
                 }
@@ -270,7 +270,7 @@ TEST_CASE( "Sliding Pieces Movement", "[unit]" ) {
                 uint64_t square = (1ull<<D4);
                 INFO("Exact white rook capture open board" <<  square);
                 GameState gameState  = GameState(std::make_shared<Board>( 0,0,0,square,0,0,0,0,0,0,0,0),0,WHITE,0); 
-                auto moves = gameState.getMoveBitboardSquareCollection(ROOK);
+                auto moves = gameState.getMoveBitboardSquareCollection(gameState,ROOK);
                 CHECK(moves->size() == 1);
                 CHECK(moves->at(0).first == 0x8080808f7080808);
                 
@@ -301,7 +301,7 @@ TEST_CASE( "Sliding Pieces Movement", "[unit]" ) {
                     
                 }
                 GameState gameState = GameState(std::make_shared<Board>( 0,0,SINGLE_SQUARE_BITBOARD(D4),0,0,0,0,0,0,0,0,0),0,WHITE,0); 
-                auto moves = gameState.getMoveBitboardSquareCollection(BISHOP);
+                auto moves = gameState.getMoveBitboardSquareCollection(gameState,BISHOP);
                 CHECK(moves->size() == 1);
                 CHECK(moves->at(0).first == 0x8041221400142241);
             }
@@ -355,7 +355,7 @@ TEST_CASE( "Blocks", "[unit]" ) {
                 GameState gameState = GameState(std::make_shared<Board>
                 ( 0,0,0,SINGLE_SQUARE_BITBOARD(C3),0,0,blockingInc,0,0,0,0,0),0,WHITE,0); 
 
-                auto moves = gameState.generateMove(ROOK);
+                auto moves = gameState.generateMove(gameState,ROOK);
                 bool passed = false;
                 for(auto move : *moves)
                 {
@@ -380,7 +380,7 @@ TEST_CASE( "Blocks", "[unit]" ) {
                 GameState gameState = GameState(std::make_shared<Board>
                 ( blockingExclude,0,0,SINGLE_SQUARE_BITBOARD(C3),0,0,0,0,0,0,0,0),0,WHITE,0); 
 
-                auto moves = gameState.generateMove(ROOK);
+                auto moves = gameState.generateMove(gameState,ROOK);
                 bool passed = true;
                 for(auto move : *moves)
                 {

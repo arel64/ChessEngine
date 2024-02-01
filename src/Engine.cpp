@@ -7,21 +7,21 @@ void Engine::startCalculation(std::shared_ptr<GoParams>)
     this->isCalculating = true;
     while(!this->stopCalculation)
     {
-        auto move  = this->game->getMoveInfoVec()->at(0);
-        setMoveAsBest(move);
+       // auto move  = this->game->getMoveInfoVec()->at(0);
+       // setMoveAsBest(move);
         this->stopCalculation = true;
     }
 }
 
 void Engine::setMoveAsBest(const move& move)
 {
-    std::string move = getSquareName(move.sourceSquare) + getSquareName(move.targetSquare);
+    //std::string move = getSquareName(move.sourceSquare) + getSquareName(move.targetSquare);
     //TODO:: Add promotion piece
     /*if (move.promotion_piece != NS_PieceType::NO_PIECE) {
         move += move.promotion_piece;
     }*/
 
-    this->bestMove = move;
+    //this->bestMove = move;
 }
 
 std::string Engine::getSquareName(uint8_t square)
@@ -53,7 +53,7 @@ void Engine::loadPositon(const std::string& fen,std::string moves)
             uint8_t sourceSquare = getSquareFromName(move.substr(0,2));
             uint8_t targetSquare = getSquareFromName(move.substr(2,4));
             std::string promotion = move.substr(4,5);
-            this->game = this->game->playPly(sourceSquare,targetSquare);
+//            this->game = this->game->playPly(sourceSquare,targetSquare);
             this->game->printGameState();
         }
 
