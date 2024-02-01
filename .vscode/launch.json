@@ -6,6 +6,7 @@
     "configurations": [
         {
             "name": "(gdb) Launch with file input",
+            "preLaunchTask": "cmake_build",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/chess_engine_main",
@@ -30,6 +31,7 @@
         },
         {
             "name": "(gdb) Launch",
+            "preLaunchTask": "cmake_build",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/chess_engine_main",

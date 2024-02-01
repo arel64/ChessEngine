@@ -24,7 +24,7 @@ std::shared_ptr<std::vector<moveInfo>> GameState::generateMoveInfoVec()
 
     return legalMoves;
 }
-std::shared_ptr<std::vector<std::pair<uint64_t,uint8_t>>>GameState::generateMoveBitBoard(PieceType p)
+std::shared_ptr<std::vector<std::pair<uint64_t,uint8_t>>>GameState::getMoveBitBoardSquareCollection(PieceType p)
 {
     uint64_t piece_moves = 0;
     uint64_t pieces = m_board->getPieceBitBoard(p, m_playerToMove);
@@ -118,7 +118,7 @@ uint64_t GameState::pawnMove(uint64_t &piece, uint64_t &pieceClipFileA, uint64_t
 std::shared_ptr<std::vector<moveInfo>> GameState::generateMove(PieceType pieceType)
 {
     auto pieceMovesLegalVec = std::make_shared<std::vector<moveInfo>>();
-    auto allMoveBoards = generateMoveBitBoard(pieceType);
+    auto allMoveBoards = getMoveBitBoardSquareCollection(pieceType);
     for(auto& [board,square] : *allMoveBoards)
     {
         while(board !=0 )

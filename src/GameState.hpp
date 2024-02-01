@@ -19,7 +19,7 @@ class GameState
     auto getBoard(){return m_board;};
     void printGameState();
     std::shared_ptr<std::vector<moveInfo>> generateMove(PieceType p);
-    std::shared_ptr<std::vector<std::pair<uint64_t,uint8_t>>>generateMoveBitBoard(PieceType p);
+    std::shared_ptr<std::vector<std::pair<uint64_t,uint8_t>>>getMoveBitBoardSquareCollection(PieceType p);
     GameState(std::string fen);
     GameState(std::shared_ptr<Board>, uint8_t castleInfo, Color playerToMove, uint16_t enPassantSquare);
     GameState(GameState const *gameState) : GameState(gameState->m_board, gameState->m_castleInfo, gameState->m_playerToMove, gameState->m_enPassantSquare) {}

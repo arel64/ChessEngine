@@ -14,11 +14,14 @@
     #define ALL_WHITE_PIECES (m_whitePawns | m_whiteKnights | m_whiteBishops | m_whiteRooks | m_whiteQueens | m_whiteKing)
     #define ALL_BLACK_PIECES (m_blackPawns | m_blackKnights | m_blackBishops | m_blackRooks | m_blackQueens | m_blackKing)
     #define ALL_PIECES (ALL_WHITE_PIECES | ALL_BLACK_PIECES)
-
+    
     #define A_FILE 0x0101010101010101ull
     #define FIRST_RANK 0x00000000000000FFull
     #define CLEAR_FILE_MASK(file_num) (~(A_FILE << (file_num)))
     #define GET_K_RANK(k)  ( FIRST_RANK << (8ull*(k-1)) )
+    #define SINGLE_SQUARE_BITBOARD(square) (1ull << square)
+    
+    
     #define WHITE_PAWN_START (0x000000000000FF00)
     #define WHITE_KNIGHT_START (0x0000000000000042)
     #define WHITE_BISHOP_START (0x0000000000000024)
