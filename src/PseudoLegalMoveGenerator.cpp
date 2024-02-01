@@ -187,35 +187,3 @@ std::shared_ptr<std::vector<move>> PseudoLegalMoveGenerator::generateMove(GameSt
     }
     return pieceMovesLegalVec;
 }
-/*
-
-std::shared_ptr<GameState> PseudoLegalMoveGenerator::playPly(uint8_t sourceSquare,uint8_t targetSquare)
-{
-    auto moveBoard = getMoveInfoVec();
-    uint64_t sourceSquareMask = (1ull) << sourceSquare;
-
-    if((m_board->getPiecesByColor(m_playerToMove) & sourceSquareMask) == 0)
-    {
-
-        return nullptr;
-    }
-    for(auto move : *moveBoard.get())
-    {
-        if(move.sourceSquare != sourceSquare)
-        {
-            continue;
-        }
-        if((move.moveBoard & (1ull << targetSquare)) == 0)
-        {
-
-            continue;
-        }
-        m_castleInfo |= move.castleInfo;
-        move.moveBoard &= (1ull << targetSquare);
-        move.targetSquare = targetSquare;
-        std::shared_ptr<Board>board = std::make_shared<Board>( m_board,move);
-        return std::make_shared<GameState>(board,m_castleInfo,~m_playerToMove,move.enPassantSquare);
-    }
-    return nullptr;
-}
-*/

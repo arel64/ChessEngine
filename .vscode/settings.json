@@ -65,6 +65,7 @@
         "typeinfo": "cpp",
         "variant": "cpp"
     },
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
     "clangd.path": "/usr/bin/clangd",
     "clangd.arguments":[
         "-log=verbose", 
