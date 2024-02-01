@@ -1,5 +1,5 @@
-#ifndef MACRO_PIECE_HPP
-#define MACRO_PIECE_HPP
+#ifndef MACRO_COLOR_HPP
+#define MACRO_COLOR_HPP
     namespace PlayerColors
     {
         enum Color

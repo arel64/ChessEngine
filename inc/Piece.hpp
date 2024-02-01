@@ -4,7 +4,7 @@
     class Piece
     {
         public:
-        //Color color;
+        PlayerColors::Color color;
         
     };
 #endif
