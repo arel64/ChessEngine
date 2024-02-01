@@ -1,11 +1,13 @@
 #ifndef MACRO_BOARD_HPP
 #define MACRO_BOARD_HPP
+    #include "Color.hpp"
     #include <cstdint>
     #include <cstdio>
     #include <cassert>
     #include <memory>
     #include <utility>
     #include <vector>
+    using namespace PlayerColors;
 
     
     #define BOARD_DIM (8)
@@ -102,22 +104,6 @@
       
     }
     using namespace NS_PieceType;
-
-    namespace NS_Color
-    {
-        enum Color
-        {
-            WHITE=0,
-            BLACK,
-            ALL,
-            NONE
-        };
-        static const Color AllColors[] = {WHITE,BLACK};
-        static const Color AllColorsEnum[] = {WHITE,BLACK,ALL,NONE};
-    }
-    
-    using namespace NS_Color;
-    
     struct moveInfo{
       uint8_t sourceSquare;
       uint8_t targetSquare;
@@ -133,7 +119,7 @@
       PieceType promotion_piece;
 
     }typedef moveInfo;
-    Color operator~(Color color);
+    
     class Board
     {
         public:

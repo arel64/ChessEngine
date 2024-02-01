@@ -1,6 +1,6 @@
 #include "Board.hpp"
 #include <cstdint>
-
+using namespace PlayerColors;
 
 Board::Board()
 {
@@ -168,21 +168,6 @@ uint64_t Board::getPieceBitBoard(PieceType pieceType, Color color)
             assert(false);
     }
 }
-Color operator~(Color color)
-{
-    if(color == WHITE)
-    {
-        return BLACK;
-    }
-    else if(color == BLACK)
-    {
-        return WHITE;
-    }
-    else
-    {
-        assert(false);
-    }
-}
 void Board::printBoard()
 {
     /*
@@ -271,7 +256,7 @@ std::pair<PieceType, Color> Board::getPieceOnSquare(uint8_t square)
 {
     for (auto pieceType : NS_PieceType::AllPieces)
     {
-        for (auto color : NS_Color::AllColors)
+        for (auto color : PlayerColors::PLAYER_COLORS)
         {
             if (getPieceBitBoard(pieceType, color) & (1ull << square))
             {

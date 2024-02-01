@@ -1,6 +1,6 @@
 
-#include "src/GameState.hpp"
-#include "src/UCIHandeling.hpp"
+#include "inc/GameState.hpp"
+#include "UCIHandeling.hpp"
 #include <memory>
 #include <iostream>
 #include <string>

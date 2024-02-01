@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstdint>
-#include "../src/Board.hpp"
-#include "../src/GameState.hpp"
+#include "Board.hpp"
+#include "GameState.hpp"
 #include <memory>
 #include <iostream>
 bool get_bitboard_before_and_after_ply(

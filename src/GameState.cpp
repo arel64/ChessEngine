@@ -1,4 +1,5 @@
 #include "GameState.hpp"
+#include "Color.hpp"
 #include "Board.hpp"
 #include <cstdint>
 #include <memory>
