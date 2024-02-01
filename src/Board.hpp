@@ -36,14 +36,16 @@
     #define BLACK_QUEEN_START (0x0800000000000000)
     #define BLACK_KING_START (0x1000000000000000)
     
-    enum Directions
+    enum Direction
     {
-        NORTH = 0,
-        SOUTH,
-        EAST,
-        WEST,
-        DIAGONAL,
-        ANTI_DIAGONAL,
+        NORTH = BOARD_DIM,
+        SOUTH = -BOARD_DIM,
+        EAST = 1,
+        WEST = -1,
+        NORTH_EAST = NORTH + EAST,
+        NORTH_WEST = NORTH + WEST,
+        SOUTH_EAST = SOUTH + EAST,
+        SOUTH_WEST = SOUTH + WEST
     };
     enum BoardRank
     {
@@ -162,6 +164,9 @@
             static bool isSquaresWithinSameRow(uint8_t square1,uint8_t square2);
             static bool isSquareWithinBoard(uint8_t square);
             static bool isSquareOnRank(uint8_t square,BoardRank rank);
+            static bool isSquareWithinDirection(uint8_t square,uint8_t squareInDirection,Direction direction);
+            static bool isOnSamePositiveDiagonal(uint8_t square,uint8_t squareInDirection);
+            static bool isOnSameNegativeDiagonal(uint8_t square,uint8_t squareInDirection);
         private:
 
 

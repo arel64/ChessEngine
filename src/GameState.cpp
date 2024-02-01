@@ -24,7 +24,7 @@ std::shared_ptr<std::vector<moveInfo>> GameState::generateMoveInfoVec()
 
     return legalMoves;
 }
-std::shared_ptr<std::vector<std::pair<uint64_t,uint8_t>>>GameState::getMoveBitBoardSquareCollection(PieceType p)
+std::shared_ptr<std::vector<std::pair<uint64_t,uint8_t>>>GameState::getMoveBitboardSquareCollection(PieceType p)
 {
     uint64_t piece_moves = 0;
     uint64_t pieces = m_board->getPieceBitBoard(p, m_playerToMove);
@@ -118,7 +118,7 @@ uint64_t GameState::pawnMove(uint64_t &piece, uint64_t &pieceClipFileA, uint64_t
 std::shared_ptr<std::vector<moveInfo>> GameState::generateMove(PieceType pieceType)
 {
     auto pieceMovesLegalVec = std::make_shared<std::vector<moveInfo>>();
-    auto allMoveBoards = getMoveBitBoardSquareCollection(pieceType);
+    auto allMoveBoards = getMoveBitboardSquareCollection(pieceType);
     for(auto& [board,square] : *allMoveBoards)
     {
         while(board !=0 )
@@ -201,117 +201,55 @@ GameState::GameState(std::string fen) : GameState()
 }
 uint64_t GameState::bishopMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square) 
 { 
-    uint64_t bishopMoves = 0;
-    bool directions[4] = {false,false,false,false};
-    for(int i=1; i < BOARD_DIM ; i++)
-    {
-        uint8_t northWestSquare = (square + BOARD_DIM - 1);
-        uint8_t northEastSquare = (square + BOARD_DIM + 1);
-        uint8_t southWestSquare = (square - BOARD_DIM - 1);
-        uint8_t southEastSquare = (square - BOARD_DIM + 1);
-
-        uint64_t northWestSquareBitBoard = (1ull << northWestSquare);
-        uint64_t northEastSquareBitBoard = (1ull << northEastSquare);
-        uint64_t southWestSquareBitBoard = (1ull << southWestSquare);
-        uint64_t southEastBitBoard = (1ull << southEastSquare);
-    //todo fix 
-        if(!directions[0] && northWestSquare < BOARD_DIM*BOARD_DIM)
-        {
-            bishopMoves |= directionSquareUpdate(bishopMoves,blockingInc,blockingExclude,northWestSquareBitBoard,directions);
-        }
-        if(!directions[1] && northEastSquare < BOARD_DIM*BOARD_DIM)
-        {
-            bishopMoves |= directionSquareUpdate(bishopMoves,blockingInc,blockingExclude,northEastSquareBitBoard,directions);
-        }
-        if(!directions[2] && southWestSquare < BOARD_DIM*BOARD_DIM)
-        {
-            bishopMoves |= directionSquareUpdate(bishopMoves,blockingInc,blockingExclude,southWestSquareBitBoard,directions);
-        }
-        if(!directions[3] && southEastSquare < BOARD_DIM*BOARD_DIM)
-        {
-            bishopMoves |= directionSquareUpdate(bishopMoves,blockingInc,blockingExclude,southEastBitBoard,directions);
-        }
-    }
-    return bishopMoves; 
+    Direction PotentialDirections[4] = {NORTH_EAST,NORTH_WEST,SOUTH_EAST,SOUTH_WEST};
+    return slidingPieceMovesByPotentialDirections(PotentialDirections, square,blockingInc, blockingExclude);
 }
-uint64_t GameState::directionSquareUpdate(uint64_t currentMoves, uint64_t blockingInc, uint64_t blockingExclude, uint64_t squareBitboard, bool directions[4])
+uint64_t GameState::getMoveBitboardAndUpdateDirection(uint64_t blockingInc, uint64_t blockingExclude, uint64_t squareBitboard, bool& directions)
 {
     if ((squareBitboard & blockingExclude) != 0)
     {
-        directions[0] = true;
-        return currentMoves;
+        directions = true;
+        return 0;
     }
     if ((squareBitboard & blockingInc) != 0)
     {
-        directions[0] = true;
-        return currentMoves | squareBitboard;
+        directions = true;
     }
-    return currentMoves | squareBitboard;
+    return squareBitboard;
+}
+uint8_t GameState::getSquareInDirection(uint8_t square, Direction direction, uint8_t distance)
+{
+    return square + direction * distance;
 }
 uint64_t GameState::rookMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square) 
 { 
-    uint64_t rookMoves = 0; 
-    bool directions[4] = {false,false,false,false};
-    for(int i=1; i < BOARD_DIM ; i++)
+    Direction PotentialDirections[4] = {NORTH,SOUTH,EAST,WEST};
+    return slidingPieceMovesByPotentialDirections(PotentialDirections, square,blockingInc, blockingExclude);
+}
+uint64_t GameState::slidingPieceMovesByPotentialDirections(Direction potentialDirections[4], uint8_t square, uint64_t blockingInc, uint64_t blockingExclude)
+{
+    uint64_t movesBitboard = 0;
+    std::pair<Direction, bool> directionsStatusPairs[4] =
+     {{potentialDirections[0], false}, {potentialDirections[1], false}, {potentialDirections[2], false}, {potentialDirections[3], false}};
+    for (int i = 1; i < BOARD_DIM; i++)
     {
-        uint8_t northSquare = (square + BOARD_DIM*i);
-        uint8_t southSquare = (square - BOARD_DIM*i);
-        uint8_t eastSquare = (square + i);
-        uint8_t westSquare = (square - i);
-
-        uint64_t northSquareBitboard = (1ull << northSquare);
-        uint64_t southSquareBitboard = (1ull << southSquare);
-        uint64_t eastSquareBitboard = (1ull << eastSquare);
-        uint64_t westSquareBitboard = (1ull << westSquare);
-
-        if(!directions[0])
+        for (auto &[direction, direction_status] : directionsStatusPairs)
         {
-            if(!Board::isSquareWithinBoard(northSquare))
+            if (direction_status)
             {
-               directions[0] = true; 
+                continue;
             }
-            else
+            uint8_t squareInDirection = getSquareInDirection(square, direction, i);
+            direction_status = !Board::isSquareWithinDirection(square, squareInDirection, direction);
+            if (direction_status)
             {
-                rookMoves |= directionSquareUpdate(rookMoves,blockingInc,blockingExclude,northSquareBitboard,directions);
+                continue;
             }
-            
-        }
-        if(!directions[1])
-        {
-            if(!Board::isSquareWithinBoard(southSquare))
-            {
-                directions[1] = true;
-            }
-            else
-            {
-                rookMoves |= directionSquareUpdate(rookMoves,blockingInc,blockingExclude,southSquareBitboard,directions);
-            }
-            
-        }
-        if(!directions[2])
-        {
-            if(!Board::isSquaresWithinSameRow(eastSquare,square))
-            {
-                directions[2] = true;
-            }
-            else
-            {
-                rookMoves |= directionSquareUpdate(rookMoves,blockingInc,blockingExclude,eastSquareBitboard,directions);
-            }
-        }
-        if(!directions[3])
-        {
-            if(!Board::isSquaresWithinSameRow(westSquare,square))
-            {
-                directions[3] = true;
-            }
-            else
-            {
-                rookMoves |= directionSquareUpdate(rookMoves,blockingInc,blockingExclude,westSquareBitboard,directions);
-            }
+            uint64_t squareInDirectionBitboard = SINGLE_SQUARE_BITBOARD(squareInDirection);
+            movesBitboard |= getMoveBitboardAndUpdateDirection(blockingInc, blockingExclude, squareInDirectionBitboard, direction_status);
         }
     }
-    return rookMoves; 
+    return movesBitboard;
 }
 GameState::~GameState()
 {

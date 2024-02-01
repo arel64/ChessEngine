@@ -211,9 +211,9 @@ TEST_CASE( "Non Sliding Pieces Movement", "[unit]" ) {
             
             for(auto square : {A2,B1,D1,E2,E4,D5,B5,A4})
             {
-                GameState gameState = GameState(std::make_shared<Board>( 0,1ull << C3,0,0,0,0,0,0,0,0,0,0),0,WHITE,0); 
+                GameState gameState = GameState(std::make_shared<Board>( 0,SINGLE_SQUARE_BITBOARD(C3),0,0,0,0,0,0,0,0,0,0),0,WHITE,0); 
                 CHECK(single_piece_move_test(KNIGHT,WHITE, C3,square,gameState));
-                gameState  = GameState(std::make_shared<Board>( 0,1ull << C3,0,0,0,0,SINGLE_SQUARE_BITBOARD(square),0,0,0,0,0),0,WHITE,0); 
+                gameState  = GameState(std::make_shared<Board>( 0,SINGLE_SQUARE_BITBOARD(C3),0,0,0,0,SINGLE_SQUARE_BITBOARD(square),0,0,0,0,0),0,WHITE,0); 
                 CHECK(single_piece_move_test_capture(KNIGHT,WHITE, C3,square,gameState));
             }
         }
@@ -221,9 +221,9 @@ TEST_CASE( "Non Sliding Pieces Movement", "[unit]" ) {
         {
             for(auto square : {A2,B1,D1,E2,E4,D5,B5,A4})
             {
-                GameState gameState = GameState(std::make_shared<Board>( 0,0,0,0,0,0,0,1ull << C3,0,0,0,0),0,BLACK,0); 
+                GameState gameState = GameState(std::make_shared<Board>( 0,0,0,0,0,0,0,SINGLE_SQUARE_BITBOARD(C3),0,0,0,0),0,BLACK,0); 
                 CHECK(single_piece_move_test(KNIGHT,BLACK, C3,square,gameState));
-                gameState  = GameState(std::make_shared<Board>( SINGLE_SQUARE_BITBOARD(square),0,0,0,0,0,0,1ull << C3,0,0,0,0),0,BLACK,0); 
+                gameState  = GameState(std::make_shared<Board>( SINGLE_SQUARE_BITBOARD(square),0,0,0,0,0,0,SINGLE_SQUARE_BITBOARD(C3),0,0,0,0),0,BLACK,0); 
                 CHECK(single_piece_move_test_capture(KNIGHT,BLACK, C3,square,gameState));
             }
         }
@@ -259,18 +259,18 @@ TEST_CASE( "Sliding Pieces Movement", "[unit]" ) {
 
                 for(auto square : {B3,A3,D3,E3,F3,G3,H3,C1,C2,C4,C5,C6,C7,C8})
                 {
-                    GameState gameState = GameState(std::make_shared<Board>( 0,0,0,1ull << C3,0,0,0,0,0,0,0,0),0,WHITE,0); 
+                    GameState gameState = GameState(std::make_shared<Board>( 0,0,0,SINGLE_SQUARE_BITBOARD(C3),0,0,0,0,0,0,0,0),0,WHITE,0); 
                     INFO("ROOK MC for direction " << square  );
                     CHECK(single_piece_move_test(ROOK,WHITE, C3,square,gameState));
                     
-                    gameState  = GameState(std::make_shared<Board>( 0,0,0,1ull << C3,0,0,SINGLE_SQUARE_BITBOARD(square),0,0,0,0,0),0,WHITE,0); 
+                    gameState  = GameState(std::make_shared<Board>( 0,0,0,SINGLE_SQUARE_BITBOARD(C3),0,0,SINGLE_SQUARE_BITBOARD(square),0,0,0,0,0),0,WHITE,0); 
                     INFO("ROOK MC CAPTURE for direction " << square );
                     CHECK(single_piece_move_test_capture(ROOK,WHITE, C3,square,gameState));
                 }
                 uint64_t square = (1ull<<D4);
                 INFO("Exact white rook capture open board" <<  square);
                 GameState gameState  = GameState(std::make_shared<Board>( 0,0,0,square,0,0,0,0,0,0,0,0),0,WHITE,0); 
-                auto moves = gameState.getMoveBitBoardSquareCollection(ROOK);
+                auto moves = gameState.getMoveBitboardSquareCollection(ROOK);
                 CHECK(moves->size() == 1);
                 CHECK(moves->at(0).first == 0x8080808f7080808);
                 
@@ -280,55 +280,52 @@ TEST_CASE( "Sliding Pieces Movement", "[unit]" ) {
                 GameState gameState;
                 for(auto square : {B3,A3,D3,E3,F3,G3,H3,C1,C2,C4,C5,C6,C7,C8})
                 {
-                    gameState = GameState(std::make_shared<Board>( 0,0,0,0,0,0,0,0,0,1ull << C3,0,0),0,BLACK,0); 
+                    gameState = GameState(std::make_shared<Board>( 0,0,0,0,0,0,0,0,0,SINGLE_SQUARE_BITBOARD(C3),0,0),0,BLACK,0); 
                     CHECK(single_piece_move_test(ROOK,BLACK, C3,square,gameState));
-                    gameState  = GameState(std::make_shared<Board>( SINGLE_SQUARE_BITBOARD(square),0,0,0,0,0,0,0,0,1ull << C3,0,0),0,BLACK,0); 
+                    gameState  = GameState(std::make_shared<Board>( SINGLE_SQUARE_BITBOARD(square),0,0,0,0,0,0,0,0,SINGLE_SQUARE_BITBOARD(C3),0,0),0,BLACK,0); 
                     CHECK(single_piece_move_test_capture(ROOK,BLACK, C3,square,gameState));
                 }
             }                
         }
-        /*
         SECTION( "bishop movement" ) {
             SECTION( "white bishop movement and capture" )
             {
-                std::shared_ptr<GameState>gameState;
                 for(auto square : {A1,B2,D4,E5,F6,G7,H8,B4,A5,D2,E1})
                 {
-                    gameState = GameState(std::make_shared<Board>( 0,0,1ull << C3,0,0,0,0,0,0,0,0,0),0,WHITE,0); 
+                    GameState gameState = GameState(std::make_shared<Board>( 0,0,SINGLE_SQUARE_BITBOARD(C3),0,0,0,0,0,0,0,0,0),0,WHITE,0); 
                     INFO("BISHOP MC for direction " << square  );
                     CHECK(single_piece_move_test(BISHOP,WHITE, C3,square,gameState));
-                    gameState  = GameState(std::make_shared<Board>( 0,0,1ull << C3,0,0,0,SINGLE_SQUARE_BITBOARD(square),0,0,0,0,0),0,WHITE,0); 
+                    gameState  = GameState(std::make_shared<Board>( 0,0,SINGLE_SQUARE_BITBOARD(C3),0,0,0,SINGLE_SQUARE_BITBOARD(square),0,0,0,0,0),0,WHITE,0); 
                     INFO("BISHOP MC CAPTURE for direction " << square );
-                    CHECK(single_piece_move_test_capture(BISHOP,WHITE,PAWN,BLACK, C3,square,gameState));
+                    CHECK(single_piece_move_test_capture(BISHOP,WHITE,C3,square,gameState));
                     
                 }
-                gameState  = GameState(std::make_shared<Board>( 0,0,1ull<D4,0,0,0,0,0,0,0,0,0),0,WHITE,0); 
-                auto moves = gameState.getMoveBitBoardSquareCollection(BISHOP);
+                GameState gameState = GameState(std::make_shared<Board>( 0,0,SINGLE_SQUARE_BITBOARD(D4),0,0,0,0,0,0,0,0,0),0,WHITE,0); 
+                auto moves = gameState.getMoveBitboardSquareCollection(BISHOP);
                 CHECK(moves->size() == 1);
-                CHECK(moves->at(0).first == 0x8080808f7080808);
+                CHECK(moves->at(0).first == 0x8041221400142241);
             }
             SECTION( "black bishop movement and capture" )
             {
-                std::shared_ptr<GameState>gameState;
                 for(auto square : {A1,B2,D4,E5,F6,G7,H8,B4,A5,D2,E1})
                 {
-                    gameState = GameState(std::make_shared<Board>( 0,0,0,0,0,0,0,0,1ull << C3,0,0,0),0,BLACK,0); 
+                    GameState gameState = GameState(std::make_shared<Board>( 0,0,0,0,0,0,0,0,SINGLE_SQUARE_BITBOARD(C3),0,0,0),0,BLACK,0); 
                     CHECK(single_piece_move_test(BISHOP,BLACK, C3,square,gameState));
-                    gameState  = GameState(std::make_shared<Board>( SINGLE_SQUARE_BITBOARD(square),0,0,0,0,0,0,0,1ull << C3,0,0,0),0,BLACK,0); 
-                    CHECK(single_piece_move_test_capture(BISHOP,BLACK,PAWN,WHITE, C3,square,gameState));
+                    gameState  = GameState(std::make_shared<Board>( SINGLE_SQUARE_BITBOARD(square),0,0,0,0,0,0,0,SINGLE_SQUARE_BITBOARD(C3),0,0,0),0,BLACK,0); 
+                    CHECK(single_piece_move_test_capture(BISHOP,BLACK,C3,square,gameState));
                 }
             }                
         }
+        
         SECTION( "queen movement" ) {
             SECTION( "white queen movement and capture" )
             {
-                std::shared_ptr<GameState>gameState;
                 for(auto square : {B3,A3,D3,E3,F3,G3,H3,C1,C2,C4,C5,C6,C7,C8,A1,B2,D4,E5,F6,G7,H8,B4,A5,D2,E1})
                 {
-                    gameState = GameState(std::make_shared<Board>( 0,0,0,0,1ull << C3,0,0,0,0,0,0,0),0,WHITE,0); 
+                    GameState gameState = GameState(std::make_shared<Board>( 0,0,0,0,SINGLE_SQUARE_BITBOARD(C3),0,0,0,0,0,0,0),0,WHITE,0); 
                     CHECK(single_piece_move_test(QUEEN,WHITE, C3,square,gameState));
-                    gameState  = GameState(std::make_shared<Board>( 0,0,0,0,1ull << C3,0,SINGLE_SQUARE_BITBOARD(square),0,0,0,0,0),0,WHITE,0); 
-                    CHECK(single_piece_move_test_capture(QUEEN,WHITE,PAWN,BLACK, C3,square,gameState));
+                    gameState  = GameState(std::make_shared<Board>( 0,0,0,0,SINGLE_SQUARE_BITBOARD(C3),0,SINGLE_SQUARE_BITBOARD(square),0,0,0,0,0),0,WHITE,0); 
+                    CHECK(single_piece_move_test_capture(QUEEN,WHITE,C3,square,gameState));
                 }
             }
             SECTION( "black queen movement and capture" )
@@ -336,13 +333,13 @@ TEST_CASE( "Sliding Pieces Movement", "[unit]" ) {
                 std::shared_ptr<GameState>gameState;
                 for(auto square : {B3,A3,D3,E3,F3,G3,H3,C1,C2,C4,C5,C6,C7,C8,A1,B2,D4,E5,F6,G7,H8,B4,A5,D2,E1})
                 {
-                    gameState = GameState(std::make_shared<Board>( 0,0,0,0,0,0,0,0,0,0,1ull << C3,0),0,BLACK,0); 
+                    GameState gameState = GameState(std::make_shared<Board>( 0,0,0,0,0,0,0,0,0,0,SINGLE_SQUARE_BITBOARD(C3),0),0,BLACK,0); 
                     CHECK(single_piece_move_test(QUEEN,BLACK, C3,square,gameState));
-                    gameState  = GameState(std::make_shared<Board>( SINGLE_SQUARE_BITBOARD(square),0,0,0,0,0,0,0,0,0,1ull << C3,0),0,BLACK,0); 
-                    CHECK(single_piece_move_test_capture(QUEEN,BLACK,PAWN,WHITE, C3,square,gameState));
+                    gameState  = GameState(std::make_shared<Board>( SINGLE_SQUARE_BITBOARD(square),0,0,0,0,0,0,0,0,0,SINGLE_SQUARE_BITBOARD(C3),0),0,BLACK,0); 
+                    CHECK(single_piece_move_test_capture(QUEEN,BLACK,C3,square,gameState));
                 }
             }                
-        }*/
+        }
     }
 }
 TEST_CASE( "Blocks", "[unit]" ) {
@@ -356,7 +353,7 @@ TEST_CASE( "Blocks", "[unit]" ) {
                 uint64_t blockingInc = SINGLE_SQUARE_BITBOARD(square);
                 uint64_t blockingExclude = 0;
                 GameState gameState = GameState(std::make_shared<Board>
-                ( 0,0,0,1ull << C3,0,0,blockingInc,0,0,0,0,0),0,WHITE,0); 
+                ( 0,0,0,SINGLE_SQUARE_BITBOARD(C3),0,0,blockingInc,0,0,0,0,0),0,WHITE,0); 
 
                 auto moves = gameState.generateMove(ROOK);
                 bool passed = false;
@@ -381,7 +378,7 @@ TEST_CASE( "Blocks", "[unit]" ) {
                 uint64_t blockingInc = 0;
                 uint64_t blockingExclude = SINGLE_SQUARE_BITBOARD(square);
                 GameState gameState = GameState(std::make_shared<Board>
-                ( blockingExclude,0,0,1ull << C3,0,0,0,0,0,0,0,0),0,WHITE,0); 
+                ( blockingExclude,0,0,SINGLE_SQUARE_BITBOARD(C3),0,0,0,0,0,0,0,0),0,WHITE,0); 
 
                 auto moves = gameState.generateMove(ROOK);
                 bool passed = true;
@@ -405,7 +402,7 @@ TEST_CASE( "Blocks", "[unit]" ) {
             {
                 uint64_t blockingInc = SINGLE_SQUARE_BITBOARD(square);
                 uint64_t blockingExclude = 0;
-                gameState = GameState(std::make_shared<Board>( 0,0,1ull << C3,0,0,0,blockingInc,0,0,0,0,0),0,WHITE,0); 
+                gameState = GameState(std::make_shared<Board>( 0,0,SINGLE_SQUARE_BITBOARD(C3),0,0,0,blockingInc,0,0,0,0,0),0,WHITE,0); 
 
                 auto moves = gameState.generateMove(BISHOP);
                 bool passed = false;

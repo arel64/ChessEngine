@@ -339,3 +339,52 @@ bool Board::isSquareOnRank(uint8_t square,BoardRank rank)
     }
     return false;
 }
+bool Board::isOnSamePositiveDiagonal(uint8_t square,uint8_t squareInDirection)
+{
+    uint8_t squareRank = square / BOARD_DIM;
+    uint8_t squareFile = square % BOARD_DIM;
+    uint8_t squareInDirectionRank = squareInDirection / BOARD_DIM;
+    uint8_t squareInDirectionFile = squareInDirection % BOARD_DIM;
+    if(squareRank - squareInDirectionRank == squareFile - squareInDirectionFile)
+    {
+        return true;
+    }
+    return false;
+}
+bool Board::isOnSameNegativeDiagonal(uint8_t square,uint8_t squareInDirection)
+{
+    uint8_t squareRank = square / BOARD_DIM;
+    uint8_t squareFile = square % BOARD_DIM;
+    uint8_t squareInDirectionRank = squareInDirection / BOARD_DIM;
+    uint8_t squareInDirectionFile = squareInDirection % BOARD_DIM;
+    
+    if(squareRank - squareInDirectionRank ==  -(squareFile - squareInDirectionFile))
+    {
+        return true;
+    }
+    return false;
+}
+
+bool Board::isSquareWithinDirection(uint8_t square, uint8_t squareInDirection, Direction direction)
+{
+    switch(direction)
+    {
+        case NORTH:
+        case SOUTH:
+            return isSquareWithinBoard(square);
+            break;
+        case EAST:
+        case WEST:
+            return Board::isSquaresWithinSameRow(square,squareInDirection);
+            break;
+        case NORTH_EAST:
+        case SOUTH_WEST:
+            return Board::isOnSamePositiveDiagonal(square,squareInDirection);
+        case NORTH_WEST:
+        case SOUTH_EAST:
+            return Board::isOnSameNegativeDiagonal(square,squareInDirection);
+        break;
+         
+    }
+    return false;
+}
