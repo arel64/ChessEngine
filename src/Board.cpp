@@ -267,7 +267,7 @@ std::pair<PieceType, Color> Board::getPieceOnSquare(uint8_t square)
     return {PieceType::NO_PIECE,Color::NONE};
 }
 
-Board::Board(std::shared_ptr<Board>board,moveInfo move)
+Board::Board(std::shared_ptr<Board>board,move move)
 {
     m_whitePawns   = board->getPieceBitBoard(PAWN,WHITE);
     m_whiteKnights = board->getPieceBitBoard(KNIGHT,WHITE);

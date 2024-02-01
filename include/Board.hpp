@@ -104,7 +104,7 @@
       
     }
     using namespace NS_PieceType;
-    struct moveInfo{
+    struct move{
       uint8_t sourceSquare;
       uint8_t targetSquare;
 
@@ -118,7 +118,7 @@
       bool promotion;
       PieceType promotion_piece;
 
-    }typedef moveInfo;
+    }typedef move;
     
     class Board
     {
@@ -129,11 +129,11 @@
                         other->m_blackPawns, other->m_blackKnights, other->m_blackBishops, other->m_blackRooks, other->m_blackQueens, other->m_blackKing){};
             Board(uint64_t whitePawns, uint64_t whiteKnights, uint64_t whiteBishops, uint64_t whiteRooks, uint64_t whiteQueens, uint64_t whiteKing,
                 uint64_t blackPawns, uint64_t blackKnights, uint64_t blackBishops, uint64_t blackRooks, uint64_t blackQueens, uint64_t blackKing);
-            Board(std::shared_ptr<Board>board,moveInfo move);
+            Board(std::shared_ptr<Board>board,move move);
             void printBoard();
             uint64_t getPieceBitBoard(PieceType pieceType, Color color);
             std::pair<PieceType, Color> getPieceOnSquare(uint8_t square);
-            inline static uint8_t getSquare(uint64_t occ) { return occ==0 ?  0: std::__countr_zero(occ);}
+            inline static uint8_t getSquare(uint64_t occ) { return occ==0 ?  0: std::__countr_zero(occ);}//TOOD RENAME
             constexpr uint64_t getPiecesByColor(Color color){{
                 if(color == WHITE)
                 {

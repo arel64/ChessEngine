@@ -13,12 +13,12 @@ void Engine::startCalculation(std::shared_ptr<GoParams>)
     }
 }
 
-void Engine::setMoveAsBest(const moveInfo& moveInfo)
+void Engine::setMoveAsBest(const move& move)
 {
-    std::string move = getSquareName(moveInfo.sourceSquare) + getSquareName(moveInfo.targetSquare);
+    std::string move = getSquareName(move.sourceSquare) + getSquareName(move.targetSquare);
     //TODO:: Add promotion piece
-    /*if (moveInfo.promotion_piece != NS_PieceType::NO_PIECE) {
-        move += moveInfo.promotion_piece;
+    /*if (move.promotion_piece != NS_PieceType::NO_PIECE) {
+        move += move.promotion_piece;
     }*/
 
     this->bestMove = move;

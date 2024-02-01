@@ -18,7 +18,7 @@ class GameState
     auto getMoveInfoVec(){return m_moveInfoVec;};
     auto getBoard(){return m_board;};
     void printGameState();
-    std::shared_ptr<std::vector<moveInfo>> generateMove(PieceType p);
+    std::shared_ptr<std::vector<move>> generateMove(PieceType p);
     std::shared_ptr<std::vector<std::pair<uint64_t,uint8_t>>>getMoveBitboardSquareCollection(PieceType p);
     GameState(std::string fen);
     GameState(std::shared_ptr<Board>, uint8_t castleInfo, Color playerToMove, uint16_t enPassantSquare);
@@ -30,7 +30,7 @@ class GameState
   private:
 
     std::shared_ptr<Board> m_board;
-    std::shared_ptr<std::vector<moveInfo>> m_moveInfoVec;
+    std::shared_ptr<std::vector<move>> m_moveInfoVec;
     /*
     # 8 bit integer to store castle information that cannot be infered from the board
     # 0-3: (white) king moved, left rook moved, right rook moved, free bit
@@ -43,7 +43,7 @@ class GameState
     uint16_t m_enPassantSquare;
 
   private:
-    std::shared_ptr<std::vector<moveInfo>> generateMoveInfoVec();
+    std::shared_ptr<std::vector<move>> generateMoveInfoVec();
     uint64_t bishopMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square); 
     uint64_t rookMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square);
     uint64_t slidingPieceMovesByPotentialDirections(Direction PotentialDirections[4], uint8_t square, uint64_t blockingInc, uint64_t blockingExclude);

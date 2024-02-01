@@ -4,17 +4,17 @@
 #include <cstdint>
 #include <memory>
 
-std::shared_ptr<std::vector<moveInfo>> GameState::generateMoveInfoVec()
+std::shared_ptr<std::vector<move>> GameState::generateMoveInfoVec()
 {
 
-    std::shared_ptr<std::vector<moveInfo>> kingLegal      = generateMove(KING);
-    std::shared_ptr<std::vector<moveInfo>> queenLegal     = generateMove(QUEEN);
-    std::shared_ptr<std::vector<moveInfo>> rookLegal      = generateMove(ROOK);
-    std::shared_ptr<std::vector<moveInfo>> bishopLegal    = generateMove(BISHOP);
-    std::shared_ptr<std::vector<moveInfo>> knightLegal    = generateMove(KNIGHT);
-    std::shared_ptr<std::vector<moveInfo>> pawnLegal      = generateMove(PAWN);
+    std::shared_ptr<std::vector<move>> kingLegal      = generateMove(KING);
+    std::shared_ptr<std::vector<move>> queenLegal     = generateMove(QUEEN);
+    std::shared_ptr<std::vector<move>> rookLegal      = generateMove(ROOK);
+    std::shared_ptr<std::vector<move>> bishopLegal    = generateMove(BISHOP);
+    std::shared_ptr<std::vector<move>> knightLegal    = generateMove(KNIGHT);
+    std::shared_ptr<std::vector<move>> pawnLegal      = generateMove(PAWN);
     
-    std::shared_ptr<std::vector<moveInfo>> legalMoves = std::make_shared<std::vector<moveInfo>>();
+    std::shared_ptr<std::vector<move>> legalMoves = std::make_shared<std::vector<move>>();
     legalMoves->insert(legalMoves->end(),kingLegal->begin(),kingLegal->end());
     legalMoves->insert(legalMoves->end(),queenLegal->begin(),queenLegal->end());
     legalMoves->insert(legalMoves->end(),rookLegal->begin(),rookLegal->end());
@@ -115,9 +115,9 @@ uint64_t GameState::pawnMove(uint64_t &piece, uint64_t &pieceClipFileA, uint64_t
     return validAttacks | validMoves;
 }
 
-std::shared_ptr<std::vector<moveInfo>> GameState::generateMove(PieceType pieceType)
+std::shared_ptr<std::vector<move>> GameState::generateMove(PieceType pieceType)
 {
-    auto pieceMovesLegalVec = std::make_shared<std::vector<moveInfo>>();
+    auto pieceMovesLegalVec = std::make_shared<std::vector<move>>();
     auto allMoveBoards = getMoveBitboardSquareCollection(pieceType);
     for(auto& [board,square] : *allMoveBoards)
     {
@@ -125,7 +125,7 @@ std::shared_ptr<std::vector<moveInfo>> GameState::generateMove(PieceType pieceTy
         {
             uint8_t targetSquare = std::__countr_zero(board);
 
-            moveInfo move = {0,0,0,0,0};
+            move move = {0,0,0,0,0};
             move.sourceSquare = square;
             move.moveBoard = board & (1ull << targetSquare);
             move.targetSquare = targetSquare;
