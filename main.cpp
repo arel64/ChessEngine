@@ -1,5 +1,5 @@
 
-#include "inc/GameState.hpp"
+#include "GameState.hpp"
 #include "UCIHandeling.hpp"
 #include <memory>
 #include <iostream>

@@ -7,9 +7,10 @@ project(
     LANGUAGES CXX
     )
 set(CMAKE_CXX_STANDARD_REQUIRED 20)
-include_directories( ${CMAKE_SOURCE_DIR}/inc )
+set(DCMAKE_EXPORT_COMPILE_COMMANDS 1)
+include_directories( ${CMAKE_SOURCE_DIR}/include )
 
-file(GLOB SOURCES "./src/*.cpp" "./inc/**.hpp")
+file(GLOB SOURCES "./src/*.cpp" "./include/**.hpp")
 file(GLOB SOURCES_TEST "tests/*.cpp" "tests/*.hpp")
 add_executable(chess_engine_main main.cpp ${SOURCES})
 

@@ -6,8 +6,7 @@
 
 std::shared_ptr<std::vector<moveInfo>> GameState::generateMoveInfoVec()
 {
-    
-   
+
     std::shared_ptr<std::vector<moveInfo>> kingLegal      = generateMove(KING);
     std::shared_ptr<std::vector<moveInfo>> queenLegal     = generateMove(QUEEN);
     std::shared_ptr<std::vector<moveInfo>> rookLegal      = generateMove(ROOK);
