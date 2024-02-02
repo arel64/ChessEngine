@@ -15,6 +15,9 @@ class PseudoLegalMoveGenerator : public MoveGenerator {
         uint64_t kingMove(GameState& gameState,uint64_t pieceClipFileA, uint64_t piece, uint64_t pieceClipFileH);
         uint64_t getMoveBitboardAndUpdateDirection(uint64_t blockingInc, uint64_t blockingExclude, uint64_t squareBitboard, bool& directions);
         uint64_t slidingPieceMovesByPotentialDirections(std::vector<std::shared_ptr<DirectionIteratorBase>> directionIterators, uint64_t blockingInclusive, uint64_t blockingExclusive);
+        std::shared_ptr<std::vector<std::shared_ptr<Ply>>> generatePseudoLegalMoves (GameState& gameState);
+        bool isEnemyKingThreatened(GameState& gameState);
+        void removeIllegalMoves(GameState& gameState,std::shared_ptr<std::vector<std::shared_ptr<Ply>>> pseduolegalMoves);
 
 };
 #endif

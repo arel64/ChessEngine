@@ -223,7 +223,7 @@ Board::Board(std::shared_ptr<std::vector<PieceFamilyBitboard>> pieceColoredTypeB
     }
 }
 
-Board::Board(std::shared_ptr<Board>board,Ply move) : 
+Board::Board(std::shared_ptr<Board>board,Ply ply) : 
 Board(
     board->m_whitePawns,
     board->m_whiteKnights,
@@ -239,12 +239,12 @@ Board(
     board->m_blackKing
 )
 {
-    uint64_t* sourcePieceBitboard = getPieceFamilyBitboardPtrOnSquare(move.sourceSquare);
-    uint64_t* targetPieceBitboard = getPieceFamilyBitboardPtrOnSquare(move.targetSquare);
+    uint64_t* sourcePieceBitboard = getPieceFamilyBitboardPtrOnSquare(ply.sourceSquare);
+    uint64_t* targetPieceBitboard = getPieceFamilyBitboardPtrOnSquare(ply.targetSquare);
     if(targetPieceBitboard != nullptr)
     {
-        *targetPieceBitboard &= ~(SINGLE_SQUARE_BITBOARD(move.targetSquare));
+        *targetPieceBitboard &= ~(SINGLE_SQUARE_BITBOARD(ply.targetSquare));
     }
-    *sourcePieceBitboard &= ~(SINGLE_SQUARE_BITBOARD(move.sourceSquare));
-    *sourcePieceBitboard |= (SINGLE_SQUARE_BITBOARD(move.targetSquare));    
+    *sourcePieceBitboard &= ~(SINGLE_SQUARE_BITBOARD(ply.sourceSquare));
+    *sourcePieceBitboard |= (SINGLE_SQUARE_BITBOARD(ply.targetSquare));    
 }
