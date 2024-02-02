@@ -21,7 +21,7 @@ class GameState
     GameState(std::string fen);
     GameState(std::shared_ptr<Board>, uint8_t castleInfo, Color playerToMove, uint16_t enPassantSquare);
     GameState(GameState const *gameState) : GameState(gameState->m_board, gameState->m_castleInfo, gameState->m_playerToMove, gameState->m_enPassantSquare) {}
-    GameState(const GameState& other,ply move);
+    GameState(const GameState& other,Ply move);
     GameState();        
     ~GameState();
   public:

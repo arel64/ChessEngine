@@ -4,7 +4,7 @@
 #include <memory>
 #include <iostream>
 
-bool checkTargetSquareContainedContainedInMoves(std::shared_ptr<std::vector<std::shared_ptr<ply>>> moves, uint8_t targetSquare)
+bool checkTargetSquareContainedContainedInMoves(std::shared_ptr<std::vector<std::shared_ptr<Ply>>> moves, uint8_t targetSquare)
 {
     for(auto move : *moves)
     {
@@ -17,7 +17,7 @@ bool checkTargetSquareContainedContainedInMoves(std::shared_ptr<std::vector<std:
     }
     return false;
 }
-bool checkTargetSquaresContainedInMoves(std::shared_ptr<std::vector<std::shared_ptr<ply>>> moves,std::vector<u_int8_t> squares)
+bool checkTargetSquaresContainedInMoves(std::shared_ptr<std::vector<std::shared_ptr<Ply>>> moves,std::vector<u_int8_t> squares)
 {
     for(auto square : squares)
     {
@@ -28,7 +28,7 @@ bool checkTargetSquaresContainedInMoves(std::shared_ptr<std::vector<std::shared_
     }
     return true;
 }
-bool checkTargetSquaresContainedInMovesExactly(std::shared_ptr<std::vector<std::shared_ptr<ply>>> moves,std::vector<u_int8_t> squares)
+bool checkTargetSquaresContainedInMovesExactly(std::shared_ptr<std::vector<std::shared_ptr<Ply>>> moves,std::vector<u_int8_t> squares)
 {
     bool isSameSize = moves->size() == squares.size();
     CHECK(isSameSize);
@@ -38,14 +38,22 @@ bool checkTargetSquaresContainedInMovesExactly(std::shared_ptr<std::vector<std::
     }
     return checkTargetSquaresContainedInMoves(moves,squares);
 }
-std::shared_ptr<std::vector<std::shared_ptr<ply>>> generateSinglePieceFamilyBoardAndMoves(std::shared_ptr<MoveGenerator> generator,PieceFamilyBitboard pieceFamily)
+std::shared_ptr<std::vector<std::shared_ptr<Ply>>> generateSinglePieceFamilyBoardAndMoves(std::shared_ptr<MoveGenerator> generator,PieceFamilyBitboard pieceFamily)
 {
     std::shared_ptr<std::vector<PieceFamilyBitboard>> pieceFamilyBitboards = std::make_shared<std::vector<PieceFamilyBitboard>>();
     pieceFamilyBitboards->push_back(pieceFamily);
     std::shared_ptr<Board> singlePawnBitboard = std::make_shared<Board>(pieceFamilyBitboards);
-    GameState gameState = GameState(singlePawnBitboard,0,WHITE,0);
+    GameState gameState = GameState(singlePawnBitboard,0,pieceFamily.getPieceFamily()->getColor(),0);
     return generator->generateMoves(gameState);
-} 
+}
+
+bool checkPieceFamilySingleSquareBitboardTargetSquaresCollectionExactly
+    (std::shared_ptr<MoveGenerator> generator,PieceFamilyBitboard pieceFamilyBitboard,std::vector<u_int8_t> squares)
+{
+    auto potentialPlys =  generateSinglePieceFamilyBoardAndMoves(generator,pieceFamilyBitboard);
+    return checkTargetSquaresContainedInMovesExactly(potentialPlys,squares);
+}
+
 TEST_CASE("Board Init","[unit]")
 {
     GameState gameState = GameState();
@@ -81,35 +89,130 @@ TEST_CASE("Board Init","[unit]")
 TEST_CASE( "Non Sliding Pieces Movement", "[unit]" ) {
     std::shared_ptr<MoveGenerator> moveGenerator = std::make_shared<PseudoLegalMoveGenerator>();
     SECTION( "Pawn Movement" ) {
-        SECTION( "Single Central Row White Pawn" )
+        SECTION("White")
         {
-            INFO("Checking white pawn movement for central row square");
-            PieceFamilyBitboard whitePawnsBitboard = PieceFamilyBitboard(PAWN,WHITE,SINGLE_SQUARE_BITBOARD(C3));
-            auto potentialPlys =  generateSinglePieceFamilyBoardAndMoves(moveGenerator,whitePawnsBitboard);
-            checkTargetSquaresContainedInMovesExactly(potentialPlys,{C4});
-            INFO("Checking white pawn movement for central row flank files");
-            whitePawnsBitboard = PieceFamilyBitboard(PAWN,WHITE,SINGLE_SQUARE_BITBOARD(A3));
-            potentialPlys =  generateSinglePieceFamilyBoardAndMoves(moveGenerator,whitePawnsBitboard);
-            checkTargetSquaresContainedInMovesExactly(potentialPlys,{A4});
-            whitePawnsBitboard = PieceFamilyBitboard(PAWN,WHITE,SINGLE_SQUARE_BITBOARD(H3));
-            potentialPlys =  generateSinglePieceFamilyBoardAndMoves(moveGenerator,whitePawnsBitboard);
-            checkTargetSquaresContainedInMovesExactly(potentialPlys,{H4});
+            PieceFamily pieceFamily =  PieceFamily(PAWN,WHITE);
+            PieceFamily pieceFamilyCapture =  PieceFamily(PAWN,BLACK);
+            SECTION( "Single Central Row Pawn" )
+            {
+                INFO("Checking pawn movement for central row square");
+                checkPieceFamilySingleSquareBitboardTargetSquaresCollectionExactly(
+                    moveGenerator,PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(C3)),{C4}
+                );
+                INFO("Checking  pawn movement for central row flank files");
+                checkPieceFamilySingleSquareBitboardTargetSquaresCollectionExactly(
+                    moveGenerator,PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(A3)),{A4}
+                );
+                checkPieceFamilySingleSquareBitboardTargetSquaresCollectionExactly(
+                    moveGenerator,PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(H3)),{H4}
+                );
+            }
+            SECTION( "Single  Second Rank Pawn")
+            {
+                INFO("Checking  pawn movement for second row square");
+                checkPieceFamilySingleSquareBitboardTargetSquaresCollectionExactly(
+                    moveGenerator,PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(C2)),{C3,C4}
+                );
+                INFO("Checking  pawn movement for second row flank files");
+                checkPieceFamilySingleSquareBitboardTargetSquaresCollectionExactly(
+                    moveGenerator,PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(A2)),{A3,A4}
+                );
+                checkPieceFamilySingleSquareBitboardTargetSquaresCollectionExactly(
+                    moveGenerator,PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(H2)),{H3,H4}
+                );
+                INFO("Checking  pawn movement for seventh row flank files");
+                checkPieceFamilySingleSquareBitboardTargetSquaresCollectionExactly(
+                    moveGenerator,PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(H7)),{H8}
+                );
+            }
+            SECTION( "Pawn Captures")
+            {
+                INFO("Checking  pawn movement for central row square");
+                auto pieceFamilyBitboardVec = std::make_shared<std::vector<PieceFamilyBitboard>>();
+                pieceFamilyBitboardVec->push_back(PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(C3)));
+                pieceFamilyBitboardVec->push_back(PieceFamilyBitboard(pieceFamilyCapture,SINGLE_SQUARE_BITBOARD(D4) + SINGLE_SQUARE_BITBOARD(B4)));
+                GameState gameState = GameState(std::make_shared<Board>(pieceFamilyBitboardVec),0,WHITE,0);
+                auto moves = moveGenerator->generateMoves(gameState);
+                checkTargetSquaresContainedInMovesExactly(moves,{D4,C4,B4});
+
+                INFO("Checking pawn capture for flank row square");
+                pieceFamilyBitboardVec = std::make_shared<std::vector<PieceFamilyBitboard>>();
+                pieceFamilyBitboardVec->push_back(PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(A2)));
+                pieceFamilyBitboardVec->push_back(PieceFamilyBitboard(pieceFamilyCapture,SINGLE_SQUARE_BITBOARD(B3)));
+                gameState = GameState(std::make_shared<Board>(pieceFamilyBitboardVec),0,WHITE,0);
+                moves = moveGenerator->generateMoves(gameState);
+                checkTargetSquaresContainedInMovesExactly(moves,{B3,A3,A4});
+
+                pieceFamilyBitboardVec = std::make_shared<std::vector<PieceFamilyBitboard>>();
+                pieceFamilyBitboardVec->push_back(PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(H2)));
+                pieceFamilyBitboardVec->push_back(PieceFamilyBitboard(pieceFamilyCapture,SINGLE_SQUARE_BITBOARD(G3)));
+                gameState = GameState(std::make_shared<Board>(pieceFamilyBitboardVec),0,WHITE,0);
+                moves = moveGenerator->generateMoves(gameState);
+                checkTargetSquaresContainedInMovesExactly(moves,{H3,H4,G3});
+
+            }
+
         }
-        SECTION( "Single White Second Rank Pawn")
+        SECTION("Black")
         {
-            INFO("Checking white pawn movement for second rank square");
-            
-           // checkTargetSquaresContainedInMovesExactly(moves,{C3,C4});
+            PieceFamily pieceFamily =  PieceFamily(PAWN,BLACK);
+            PieceFamily pieceFamilyCapture =  PieceFamily(PAWN,WHITE);
+
+            SECTION( "Single Central Row  Pawn" )
+            {
+                INFO("Checking  pawn movement for central row square");
+                checkPieceFamilySingleSquareBitboardTargetSquaresCollectionExactly(
+                    moveGenerator,PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(C3)),{C2}
+                );
+                INFO("Checking  pawn movement for central row flank files");
+                checkPieceFamilySingleSquareBitboardTargetSquaresCollectionExactly(
+                    moveGenerator,PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(A3)),{A2}
+                );
+                checkPieceFamilySingleSquareBitboardTargetSquaresCollectionExactly(
+                    moveGenerator,PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(H3)),{H2}
+                );
+            }
+            SECTION( "Single  Seventh Rank Pawn")
+            {
+                INFO("Checking  pawn movement for Seventh row flank files");
+                checkPieceFamilySingleSquareBitboardTargetSquaresCollectionExactly(
+                    moveGenerator,PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(A7)),{A6,A5}
+                );
+                checkPieceFamilySingleSquareBitboardTargetSquaresCollectionExactly(
+                    moveGenerator,PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(H7)),{H5,H6}
+                );
+                INFO("Checking  pawn movement for second row square");
+                checkPieceFamilySingleSquareBitboardTargetSquaresCollectionExactly(
+                    moveGenerator,PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(C2)),{C1}
+                );
+            }
+            SECTION( "Pawn Captures")
+            {
+                INFO("Checking  pawn movement for central row square");
+                auto pieceFamilyBitboardVec = std::make_shared<std::vector<PieceFamilyBitboard>>();
+                pieceFamilyBitboardVec->push_back(PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(C3)));
+                pieceFamilyBitboardVec->push_back(PieceFamilyBitboard(pieceFamilyCapture,SINGLE_SQUARE_BITBOARD(B2) + SINGLE_SQUARE_BITBOARD(D2)));
+                GameState gameState = GameState(std::make_shared<Board>(pieceFamilyBitboardVec),0,BLACK,0);
+                auto moves = moveGenerator->generateMoves(gameState);
+                checkTargetSquaresContainedInMovesExactly(moves,{D2,C2,B2});
+
+                INFO("Checking pawn capture for flank row square");
+                pieceFamilyBitboardVec = std::make_shared<std::vector<PieceFamilyBitboard>>();
+                pieceFamilyBitboardVec->push_back(PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(A2)));
+                pieceFamilyBitboardVec->push_back(PieceFamilyBitboard(pieceFamilyCapture,SINGLE_SQUARE_BITBOARD(B1)));
+                gameState = GameState(std::make_shared<Board>(pieceFamilyBitboardVec),0,BLACK,0);
+                moves = moveGenerator->generateMoves(gameState);
+                checkTargetSquaresContainedInMovesExactly(moves,{B1,A1});
+
+                pieceFamilyBitboardVec = std::make_shared<std::vector<PieceFamilyBitboard>>();
+                pieceFamilyBitboardVec->push_back(PieceFamilyBitboard(pieceFamily,SINGLE_SQUARE_BITBOARD(H2)));
+                pieceFamilyBitboardVec->push_back(PieceFamilyBitboard(pieceFamilyCapture,SINGLE_SQUARE_BITBOARD(G1)));
+                gameState = GameState(std::make_shared<Board>(pieceFamilyBitboardVec),0,BLACK,0);
+                moves = moveGenerator->generateMoves(gameState);
+                checkTargetSquaresContainedInMovesExactly(moves,{H1,G1});
+
+            }
         }
-        SECTION( "Single White Seventh Rank Pawn")
-        {
-            /*INFO("Checking white pawn movement for second rank square");
-            std::shared_ptr singlePawnBitboard = std::make_shared<Board>(SINGLE_SQUARE_BITBOARD(C7) ,0,0,0,0,0,0,0,0,0,0,0);
-            GameState gameState = GameState(singlePawnBitboard,0,WHITE,0);
-            std::shared_ptr moves =  moveGenerator->generateMoves(gameState);
-            checkTargetSquaresContainedInMovesExactly(moves,{C8});*/
-        }
-        
     }
 }
     /*

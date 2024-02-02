@@ -4,9 +4,9 @@
 #include "DirectionIterator.hpp"
 class PseudoLegalMoveGenerator : public MoveGenerator {
     public:
-        std::shared_ptr<std::vector<std::shared_ptr<ply>>> generateMoves(GameState& gameState) override;
+        std::shared_ptr<std::vector<std::shared_ptr<Ply>>> generateMoves(GameState& gameState) override;
     private:
-        std::shared_ptr<std::vector<std::shared_ptr<ply>>> generateMove(GameState& gameState,PieceType pieceType);
+        std::shared_ptr<std::vector<std::shared_ptr<Ply>>> generateMove(GameState& gameState,PieceType pieceType);
         std::shared_ptr<std::vector<std::pair<uint64_t,uint8_t>>>getMoveBitboardSquareCollection(GameState& gameState,PieceType p);
         uint64_t bishopMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square); 
         uint64_t rookMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square);

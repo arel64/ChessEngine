@@ -1,14 +1,15 @@
 #include "PseudoLegalMoveGenerator.hpp"
-std::shared_ptr<std::vector<std::shared_ptr<ply>>> PseudoLegalMoveGenerator::generateMoves (GameState& gameState)
+#include "Ply.hpp"
+std::shared_ptr<std::vector<std::shared_ptr<Ply>>> PseudoLegalMoveGenerator::generateMoves (GameState& gameState)
 {
-    std::shared_ptr<std::vector<std::shared_ptr<ply>>> kingLegal      = generateMove(gameState,KING);
-    std::shared_ptr<std::vector<std::shared_ptr<ply>>> queenLegal     = generateMove(gameState,QUEEN);
-    std::shared_ptr<std::vector<std::shared_ptr<ply>>> rookLegal      = generateMove(gameState,ROOK);
-    std::shared_ptr<std::vector<std::shared_ptr<ply>>> bishopLegal    = generateMove(gameState,BISHOP);
-    std::shared_ptr<std::vector<std::shared_ptr<ply>>> knightLegal    = generateMove(gameState,KNIGHT);
-    std::shared_ptr<std::vector<std::shared_ptr<ply>>> pawnLegal      = generateMove(gameState,PAWN);
+    std::shared_ptr<std::vector<std::shared_ptr<Ply>>> kingLegal      = generateMove(gameState,KING);
+    std::shared_ptr<std::vector<std::shared_ptr<Ply>>> queenLegal     = generateMove(gameState,QUEEN);
+    std::shared_ptr<std::vector<std::shared_ptr<Ply>>> rookLegal      = generateMove(gameState,ROOK);
+    std::shared_ptr<std::vector<std::shared_ptr<Ply>>> bishopLegal    = generateMove(gameState,BISHOP);
+    std::shared_ptr<std::vector<std::shared_ptr<Ply>>> knightLegal    = generateMove(gameState,KNIGHT);
+    std::shared_ptr<std::vector<std::shared_ptr<Ply>>> pawnLegal      = generateMove(gameState,PAWN);
     
-    std::shared_ptr<std::vector<std::shared_ptr<ply>>> legalMoves = std::make_shared<std::vector<std::shared_ptr<ply>>>();
+    std::shared_ptr<std::vector<std::shared_ptr<Ply>>> legalMoves = std::make_shared<std::vector<std::shared_ptr<Ply>>>();
     legalMoves->insert(legalMoves->end(),kingLegal->begin(),kingLegal->end());
     legalMoves->insert(legalMoves->end(),queenLegal->begin(),queenLegal->end());
     legalMoves->insert(legalMoves->end(),rookLegal->begin(),rookLegal->end());
@@ -157,24 +158,19 @@ uint64_t PseudoLegalMoveGenerator::pawnMove(GameState& gamestate,uint64_t &piece
     return validAttacks | validMoves;
 }
 
-std::shared_ptr<std::vector<std::shared_ptr<ply>>> PseudoLegalMoveGenerator::generateMove(GameState& gameState, PieceType pieceType)
+std::shared_ptr<std::vector<std::shared_ptr<Ply>>> PseudoLegalMoveGenerator::generateMove(GameState& gameState, PieceType pieceType)
 {
-    auto pieceMovesLegalVec = std::make_shared<std::vector<std::shared_ptr<ply>>>();
+    auto pieceMovesLegalVec = std::make_shared<std::vector<std::shared_ptr<Ply>>>();
     
     auto allMoveBoards = getMoveBitboardSquareCollection(gameState,pieceType);
     for(auto& [board,square] : *allMoveBoards)
     {
-        while(board !=0 )
+        while(board != 0 )
         {
             uint8_t targetSquare = std::__countr_zero(board);
+            std::shared_ptr<Ply> singleMove = std::make_shared<Ply>(square,targetSquare,0,false,PieceType::NO_PIECE);
 
-            std::shared_ptr<ply> singleMove = std::make_shared<ply>();
-            singleMove->sourceSquare = square;
-            singleMove->targetSquare = targetSquare;
-            //TODO add promotion, castle implications
-            singleMove->castleInfo = 0;
-            singleMove->enPassantSquare = 0;
-            board &= ~(1ull << targetSquare);
+            board &= ~SINGLE_SQUARE_BITBOARD(targetSquare);
             pieceMovesLegalVec->push_back(singleMove);
         }
         

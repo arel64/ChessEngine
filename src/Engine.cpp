@@ -13,7 +13,7 @@ void Engine::startCalculation(std::shared_ptr<GoParams>)
     }
 }
 
-void Engine::setMoveAsBest(const ply& move)
+void Engine::setMoveAsBest(const Ply& move)
 {
     //std::string move = getSquareName(move.sourceSquare) + getSquareName(move.targetSquare);
     //TODO:: Add promotion piece

@@ -223,7 +223,7 @@ Board::Board(std::shared_ptr<std::vector<PieceFamilyBitboard>> pieceColoredTypeB
     }
 }
 
-Board::Board(std::shared_ptr<Board>board,ply move) : 
+Board::Board(std::shared_ptr<Board>board,Ply move) : 
 Board(
     board->m_whitePawns,
     board->m_whiteKnights,

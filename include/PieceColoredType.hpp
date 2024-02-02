@@ -39,6 +39,11 @@
                 this->pieceFamily = pieceFamily;
                 this->bitboard = bitboard;
             }
+            PieceFamilyBitboard(PieceFamily& pieceFamily, uint64_t bitboard)
+            {
+                this->pieceFamily = std::make_shared<PieceFamily>(pieceFamily);
+                this->bitboard = bitboard;
+            }
             uint64_t getBitboard() {return bitboard;}
             std::shared_ptr<PieceFamily> getPieceFamily() {return pieceFamily;} 
         private:

@@ -1,6 +1,6 @@
 #ifndef MACRO_BOARD_HPP
 #define MACRO_BOARD_HPP
-    #include "PieceColoredType.hpp"
+    #include "Ply.hpp"
     #include <cstdint>
     #include <cstdio>
     #include <cassert>
@@ -76,20 +76,6 @@
         A8, B8, C8, D8, E8, F8, G8, H8
 
     };
-    struct ply{
-        uint8_t sourceSquare;
-        uint8_t targetSquare;
-        PieceType sourcePiece;
-        PieceType targetPiece;
-
-        uint8_t castleInfo;
-        bool passant_capture;   
-        uint16_t enPassantSquare;
-
-        bool promotion;
-        PieceType promotion_piece;
-
-    }typedef ply;
     
     class Board
     {
@@ -101,7 +87,7 @@
             Board(uint64_t whitePawns, uint64_t whiteKnights, uint64_t whiteBishops, uint64_t whiteRooks, uint64_t whiteQueens, uint64_t whiteKing,
                 uint64_t blackPawns, uint64_t blackKnights, uint64_t blackBishops, uint64_t blackRooks, uint64_t blackQueens, uint64_t blackKing);
             Board(std::shared_ptr<std::vector<PieceFamilyBitboard>>);
-            Board(std::shared_ptr<Board>board,ply move);
+            Board(std::shared_ptr<Board>board,Ply ply);
             void printBoard();
             uint64_t getPieceFamilyBitBoard(PieceFamily& pieceFamily);
             uint64_t* getPieceFamilyBitboardPtrOnSquare(uint8_t square);
