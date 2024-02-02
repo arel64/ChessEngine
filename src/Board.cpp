@@ -40,133 +40,79 @@ Board::Board(uint64_t whitePawns, uint64_t whiteKnights, uint64_t whiteBishops, 
                                         m_blackPawns,m_blackKnights,m_blackBishops,m_blackRooks,m_blackQueens,m_blackKing};*/
 
 }
-void Board::setPieceBitBoard(PieceType pieceType, Color color,int64_t bitBoard)
+uint64_t* Board::getPieceFamilyBitBoardPtr(PieceFamily& piecefamily)
 {
-    switch(pieceType)
+    Color color = piecefamily.getColor();
+    switch(piecefamily.getType())
     {
         case PAWN:
             if(color == WHITE)
             {
-                m_whitePawns = bitBoard;
+                return &m_whitePawns;
             }
             else
             {
-                m_blackPawns = bitBoard;
-            }
-            break;
-        case KNIGHT:
-            if(color == WHITE)
-            {
-                m_whiteKnights = bitBoard;
-            }
-            else
-            {
-                m_blackKnights = bitBoard;
-            }
-            break;
-        case BISHOP:
-            if(color == WHITE)
-            {
-                m_whiteBishops = bitBoard;
-            }
-            else
-            {
-                m_blackBishops = bitBoard;
-            }
-            break;
-        case ROOK:
-            if(color == WHITE)
-            {
-                m_whiteRooks = bitBoard;
-            }
-            else
-            {
-                m_blackRooks = bitBoard;
-            }
-            break;
-        case QUEEN:
-            if(color == WHITE)
-            {
-                m_whiteQueens = bitBoard;
-            }
-            else
-            {
-                m_blackQueens = bitBoard;
-            }
-            break;
-        case KING:
-            if(color == WHITE)
-            {
-                m_whiteKing = bitBoard;
-            }
-            else
-            {
-                m_blackKing = bitBoard;
-            }
-            break;
-    }
-}
-uint64_t Board::getPieceBitBoard(PieceType pieceType, Color color)
-{
-    switch(pieceType)
-    {
-        case PAWN:
-            if(color == WHITE)
-            {
-                return m_whitePawns;
-            }
-            else
-            {
-                return m_blackPawns;
+                return &m_blackPawns;
             }
         case KNIGHT:
             if(color == WHITE)
             {
-                return m_whiteKnights;
+                return &m_whiteKnights;
             }
             else
             {
-                return m_blackKnights;
+                return &m_blackKnights;
             }
         case BISHOP:
             if(color == WHITE)
             {
-                return m_whiteBishops;
+                return &m_whiteBishops;
             }
             else
             {
-                return m_blackBishops;
+                return &m_blackBishops;
             }
         case ROOK:
             if(color == WHITE)
             {
-                return m_whiteRooks;
+                return &m_whiteRooks;
             }
             else
             {
-                return m_blackRooks;
+                return &m_blackRooks;
             }
         case QUEEN:
             if(color == WHITE)
             {
-                return m_whiteQueens;
+                return &m_whiteQueens;
             }
             else
             {
-                return m_blackQueens;
+                return &m_blackQueens;
             }
         case KING:
             if(color == WHITE)
             {
-                return m_whiteKing;
+                return &m_whiteKing;
             }
             else
             {
-                return m_blackKing;
+                return &m_blackKing;
             }
         default:
             assert(false);
     }
+    return nullptr;
+}
+void Board::setPieceBitBoard(PieceFamilyBitboard& pieceFamilyBitboard)
+{
+    uint64_t* pieceBitBoard = getPieceFamilyBitBoardPtr(*pieceFamilyBitboard.getPieceFamily());
+    *pieceBitBoard = pieceFamilyBitboard.getBitboard();
+}
+uint64_t Board::getPieceFamilyBitBoard(PieceFamily& piecefamily)
+{
+    uint64_t* pieceBitBoard = getPieceFamilyBitBoardPtr(piecefamily);
+    return *pieceBitBoard;
 }
 void Board::printBoard()
 {
@@ -252,124 +198,53 @@ void Board::printBoard()
         }
     }
 }
-std::pair<PieceType, Color> Board::getPieceOnSquare(uint8_t square)
+uint64_t* Board::getPieceFamilyBitboardPtrOnSquare(uint8_t square)
 {
-    for (auto pieceType : NS_PieceType::AllPieces)
+    for (auto pieceType : PIECE_TYPES)
     {
         for (auto color : PlayerColors::PLAYER_COLORS)
         {
-            if (getPieceBitBoard(pieceType, color) & (1ull << square))
+            PieceFamily pieceFamily = PieceFamily(pieceType, color);
+            uint64_t* pieceFamilyBitboardPtr = getPieceFamilyBitBoardPtr(pieceFamily);
+            if (*pieceFamilyBitboardPtr & SINGLE_SQUARE_BITBOARD(square))
             {
-                return {pieceType, color};
+                return pieceFamilyBitboardPtr;
             }
         }
     }
-    return {PieceType::NO_PIECE,Color::NONE};
+    return nullptr;
+}
+Board::Board(std::shared_ptr<std::vector<PieceFamilyBitboard>> pieceColoredTypeBitboardInitializationEnumberable) :
+    Board(0,0,0,0,0,0,0,0,0,0,0,0)
+{
+    for(auto pieceColoredTypeBitboard : *pieceColoredTypeBitboardInitializationEnumberable)
+    {
+        setPieceBitBoard(pieceColoredTypeBitboard);
+    }
 }
 
-Board::Board(std::shared_ptr<Board>board,move move)
+Board::Board(std::shared_ptr<Board>board,ply move) : 
+Board(
+    board->m_whitePawns,
+    board->m_whiteKnights,
+    board->m_whiteBishops,
+    board->m_whiteRooks,
+    board->m_whiteQueens,
+    board->m_whiteKing,
+    board->m_blackPawns,
+    board->m_blackKnights,
+    board->m_blackBishops,
+    board->m_blackRooks,
+    board->m_blackQueens,
+    board->m_blackKing
+)
 {
-    m_whitePawns   = board->getPieceBitBoard(PAWN,WHITE);
-    m_whiteKnights = board->getPieceBitBoard(KNIGHT,WHITE);
-    m_whiteBishops = board->getPieceBitBoard(BISHOP,WHITE);
-    m_whiteRooks   = board->getPieceBitBoard(ROOK,WHITE);
-    m_whiteQueens  = board->getPieceBitBoard(QUEEN,WHITE);
-    m_whiteKing    = board->getPieceBitBoard(KING,WHITE);
-    m_blackPawns   = board->getPieceBitBoard(PAWN,BLACK);
-    m_blackKnights = board->getPieceBitBoard(KNIGHT,BLACK);
-    m_blackBishops = board->getPieceBitBoard(BISHOP,BLACK);
-    m_blackRooks   = board->getPieceBitBoard(ROOK,BLACK);
-    m_blackQueens  = board->getPieceBitBoard(QUEEN,BLACK);
-    m_blackKing    = board->getPieceBitBoard(KING,BLACK);
-
-
-    auto sourcePiece = getPieceOnSquare(move.sourceSquare);
-    auto targetPiece = getPieceOnSquare(move.targetSquare);
-    if(targetPiece.first != NO_PIECE)
+    uint64_t* sourcePieceBitboard = getPieceFamilyBitboardPtrOnSquare(move.sourceSquare);
+    uint64_t* targetPieceBitboard = getPieceFamilyBitboardPtrOnSquare(move.targetSquare);
+    if(targetPieceBitboard != nullptr)
     {
-        int64_t modifiedTarget = board->getPieceBitBoard(targetPiece.first,targetPiece.second);
-        modifiedTarget &= ~(1ull << move.targetSquare);
-        setPieceBitBoard(targetPiece.first,targetPiece.second,modifiedTarget);
-
+        *targetPieceBitboard &= ~(SINGLE_SQUARE_BITBOARD(move.targetSquare));
     }
-    int64_t modifiedSource = board->getPieceBitBoard(sourcePiece.first,sourcePiece.second);
-    modifiedSource &= ~(1ull << move.sourceSquare);
-    modifiedSource |= (1ull << move.targetSquare);    
-    setPieceBitBoard(sourcePiece.first,sourcePiece.second,modifiedSource);
-    /*_allPieces = std::vector<uint64_t>{m_whitePawns,m_whiteKnights,m_whiteBishops,m_whiteRooks,m_whiteQueens,m_whiteKing,
-                                        m_blackPawns,m_blackKnights,m_blackBishops,m_blackRooks,m_blackQueens,m_blackKing};*/
-
-}
-bool Board::isSquareWithinBoard(uint8_t square)
-{
-    if(square >= BOARD_DIM*BOARD_DIM || square < 0)
-    {
-        return false;
-    }
-    return true;
-}
-bool Board::isSquaresWithinSameRow(uint8_t square1,uint8_t square2)
-{
-    if(square1 / BOARD_DIM == square2 / BOARD_DIM)
-    {
-        return true;
-    }
-    return false;
-}
-bool Board::isSquareOnRank(uint8_t square,BoardRank rank)
-{
-    if(square / BOARD_DIM == rank)
-    {
-        return true;
-    }
-    return false;
-}
-bool Board::isOnSamePositiveDiagonal(uint8_t square,uint8_t squareInDirection)
-{
-    uint8_t squareRank = square / BOARD_DIM;
-    uint8_t squareFile = square % BOARD_DIM;
-    uint8_t squareInDirectionRank = squareInDirection / BOARD_DIM;
-    uint8_t squareInDirectionFile = squareInDirection % BOARD_DIM;
-    if(squareRank - squareInDirectionRank == squareFile - squareInDirectionFile)
-    {
-        return true;
-    }
-    return false;
-}
-bool Board::isOnSameNegativeDiagonal(uint8_t square,uint8_t squareInDirection)
-{
-    uint8_t squareRank = square / BOARD_DIM;
-    uint8_t squareFile = square % BOARD_DIM;
-    uint8_t squareInDirectionRank = squareInDirection / BOARD_DIM;
-    uint8_t squareInDirectionFile = squareInDirection % BOARD_DIM;
-    
-    if(squareRank - squareInDirectionRank ==  -(squareFile - squareInDirectionFile))
-    {
-        return true;
-    }
-    return false;
-}
-
-bool Board::isSquareWithinDirection(uint8_t square, uint8_t squareInDirection, Direction direction)
-{
-    switch(direction)
-    {
-        case NORTH:
-        case SOUTH:
-            return isSquareWithinBoard(square);
-            break;
-        case EAST:
-        case WEST:
-            return Board::isSquaresWithinSameRow(square,squareInDirection);
-            break;
-        case NORTH_EAST:
-        case SOUTH_WEST:
-            return Board::isOnSamePositiveDiagonal(square,squareInDirection);
-        case NORTH_WEST:
-        case SOUTH_EAST:
-            return Board::isOnSameNegativeDiagonal(square,squareInDirection);
-        break;
-         
-    }
-    return false;
+    *sourcePieceBitboard &= ~(SINGLE_SQUARE_BITBOARD(move.sourceSquare));
+    *sourcePieceBitboard |= (SINGLE_SQUARE_BITBOARD(move.targetSquare));    
 }

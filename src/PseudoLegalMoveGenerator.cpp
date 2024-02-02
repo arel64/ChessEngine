@@ -1,15 +1,14 @@
 #include "PseudoLegalMoveGenerator.hpp"
-
-std::shared_ptr<std::vector<move>> PseudoLegalMoveGenerator::generateMoves (std::shared_ptr<GameState> gameState)
+std::shared_ptr<std::vector<std::shared_ptr<ply>>> PseudoLegalMoveGenerator::generateMoves (GameState& gameState)
 {
-    std::shared_ptr<std::vector<move>> kingLegal      = generateMove(gameState,KING);
-    std::shared_ptr<std::vector<move>> queenLegal     = generateMove(gameState,QUEEN);
-    std::shared_ptr<std::vector<move>> rookLegal      = generateMove(gameState,ROOK);
-    std::shared_ptr<std::vector<move>> bishopLegal    = generateMove(gameState,BISHOP);
-    std::shared_ptr<std::vector<move>> knightLegal    = generateMove(gameState,KNIGHT);
-    std::shared_ptr<std::vector<move>> pawnLegal      = generateMove(gameState,PAWN);
+    std::shared_ptr<std::vector<std::shared_ptr<ply>>> kingLegal      = generateMove(gameState,KING);
+    std::shared_ptr<std::vector<std::shared_ptr<ply>>> queenLegal     = generateMove(gameState,QUEEN);
+    std::shared_ptr<std::vector<std::shared_ptr<ply>>> rookLegal      = generateMove(gameState,ROOK);
+    std::shared_ptr<std::vector<std::shared_ptr<ply>>> bishopLegal    = generateMove(gameState,BISHOP);
+    std::shared_ptr<std::vector<std::shared_ptr<ply>>> knightLegal    = generateMove(gameState,KNIGHT);
+    std::shared_ptr<std::vector<std::shared_ptr<ply>>> pawnLegal      = generateMove(gameState,PAWN);
     
-    std::shared_ptr<std::vector<move>> legalMoves = std::make_shared<std::vector<move>>();
+    std::shared_ptr<std::vector<std::shared_ptr<ply>>> legalMoves = std::make_shared<std::vector<std::shared_ptr<ply>>>();
     legalMoves->insert(legalMoves->end(),kingLegal->begin(),kingLegal->end());
     legalMoves->insert(legalMoves->end(),queenLegal->begin(),queenLegal->end());
     legalMoves->insert(legalMoves->end(),rookLegal->begin(),rookLegal->end());
@@ -21,60 +20,55 @@ std::shared_ptr<std::vector<move>> PseudoLegalMoveGenerator::generateMoves (std:
 }
 uint64_t PseudoLegalMoveGenerator::bishopMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square) 
 { 
-    Direction PotentialDirections[4] = {NORTH_EAST,NORTH_WEST,SOUTH_EAST,SOUTH_WEST};
-    return slidingPieceMovesByPotentialDirections(PotentialDirections, square,blockingInc, blockingExclude);
-}
-uint64_t PseudoLegalMoveGenerator::getMoveBitboardAndUpdateDirection(uint64_t blockingInc, uint64_t blockingExclude, uint64_t squareBitboard, bool& directions)
-{
-    if ((squareBitboard & blockingExclude) != 0)
-    {
-        directions = true;
-        return 0;
-    }
-    if ((squareBitboard & blockingInc) != 0)
-    {
-        directions = true;
-    }
-    return squareBitboard;
-}
-uint8_t PseudoLegalMoveGenerator::getSquareInDirection(uint8_t square, Direction direction, uint8_t distance)
-{
-    return square + direction * distance;
+    std::vector<std::shared_ptr<DirectionIteratorBase>> directionIterators = {
+        std::make_shared<DirectionIterator<NORTH_EAST>>(square),
+        std::make_shared<DirectionIterator<NORTH_WEST>>(square),
+        std::make_shared<DirectionIterator<SOUTH_EAST>>(square),
+        std::make_shared<DirectionIterator<SOUTH_WEST>>(square)
+    };
+    return slidingPieceMovesByPotentialDirections(directionIterators,blockingInc, blockingExclude);
 }
 uint64_t PseudoLegalMoveGenerator::rookMove(uint64_t blockingInc,uint64_t blockingExclude,uint8_t square) 
 { 
-    Direction PotentialDirections[4] = {NORTH,SOUTH,EAST,WEST};
-    return slidingPieceMovesByPotentialDirections(PotentialDirections, square,blockingInc, blockingExclude);
+    std::vector<std::shared_ptr<DirectionIteratorBase>> directionIterators = {
+        std::make_shared<DirectionIterator<NORTH>>(square),
+        std::make_shared<DirectionIterator<SOUTH>>(square),
+        std::make_shared<DirectionIterator<EAST>>(square),
+        std::make_shared<DirectionIterator<WEST>>(square)
+    };
+    return slidingPieceMovesByPotentialDirections(directionIterators,blockingInc, blockingExclude);
 }
-uint64_t PseudoLegalMoveGenerator::slidingPieceMovesByPotentialDirections(Direction potentialDirections[4], uint8_t square, uint64_t blockingInc, uint64_t blockingExclude)
+uint64_t PseudoLegalMoveGenerator::slidingPieceMovesByPotentialDirections(std::vector<std::shared_ptr<DirectionIteratorBase>> directionIterators, uint64_t blockingInclusive, uint64_t blockingExclusive)
 {
     uint64_t movesBitboard = 0;
-    std::pair<Direction, bool> directionsStatusPairs[4] =
-     {{potentialDirections[0], false}, {potentialDirections[1], false}, {potentialDirections[2], false}, {potentialDirections[3], false}};
-    for (int i = 1; i < BOARD_DIM; i++)
+    for (auto &directionIterator : directionIterators)
     {
-        for (auto &[direction, direction_status] : directionsStatusPairs)
+        int8_t square = directionIterator->getNextSquare();
+        while (square != -1)
         {
-            if (direction_status)
+            uint64_t squareInDirectionBitboard = SINGLE_SQUARE_BITBOARD(square);
+            if(squareInDirectionBitboard & blockingInclusive)
             {
-                continue;
+                break;
             }
-            uint8_t squareInDirection = getSquareInDirection(square, direction, i);
-            direction_status = !Board::isSquareWithinDirection(square, squareInDirection, direction);
-            if (direction_status)
+            movesBitboard |= squareInDirectionBitboard;
+            if(squareInDirectionBitboard & blockingExclusive)
             {
-                continue;
+                break;
             }
-            uint64_t squareInDirectionBitboard = SINGLE_SQUARE_BITBOARD(squareInDirection);
-            movesBitboard |= getMoveBitboardAndUpdateDirection(blockingInc, blockingExclude, squareInDirectionBitboard, direction_status);
+            square = directionIterator->getNextSquare();
         }
     }
     return movesBitboard;
 }
+/**
+ * TODO:: Refactor
+ */
 std::shared_ptr<std::vector<std::pair<uint64_t,uint8_t>>>PseudoLegalMoveGenerator::getMoveBitboardSquareCollection(GameState& gameState,PieceType p)
 {
     uint64_t piece_moves = 0;
-    uint64_t pieces = gameState.getBoard()->getPieceBitBoard(p, gameState.getPlayerToMove());
+    PieceFamily pieceFamily = PieceFamily(p,gameState.getPlayerToMove());
+    uint64_t pieces = gameState.getBoard()->getPieceFamilyBitBoard(pieceFamily);
     std::shared_ptr<std::vector<std::pair<uint64_t,uint8_t>>> allMoveBoards =
         std::make_shared<std::vector<std::pair<uint64_t,uint8_t>>>();
     
@@ -90,18 +84,18 @@ std::shared_ptr<std::vector<std::pair<uint64_t,uint8_t>>>PseudoLegalMoveGenerato
             pieceClipFileH = piece & CLEAR_FILE_MASK(FILE_H);
             pieceClipFileGH = pieceClipFileH & CLEAR_FILE_MASK(FILE_G);
         }
-        uint64_t playerToMoveColoredPiecesBitboard = gameState.getBoard()->getPiecesByColor(~gameState.getPlayerToMove());
-        uint64_t otherPlayerColoredPiecesBitboard = gameState.getBoard()->getPiecesByColor(gameState.getPlayerToMove());
+        uint64_t playerToMoveColoredPiecesBitboard = gameState.getBoard()->getAllPiecesBitboardsByColor(gameState.getPlayerToMove());
+        uint64_t otherPlayerColoredPiecesBitboard = gameState.getBoard()->getAllPiecesBitboardsByColor(~gameState.getPlayerToMove());
         switch (p) {
             case BISHOP:
-                piece_moves |= bishopMove(playerToMoveColoredPiecesBitboard,otherPlayerColoredPiecesBitboard,square);
+                piece_moves |= bishopMove(otherPlayerColoredPiecesBitboard,playerToMoveColoredPiecesBitboard,square);
                 break;
             case ROOK:
-                piece_moves |= rookMove(playerToMoveColoredPiecesBitboard,otherPlayerColoredPiecesBitboard,square);
+                piece_moves |= rookMove(otherPlayerColoredPiecesBitboard,playerToMoveColoredPiecesBitboard,square);
                 break;
             case QUEEN:
-                piece_moves |= bishopMove(playerToMoveColoredPiecesBitboard,otherPlayerColoredPiecesBitboard,square);
-                piece_moves |= rookMove(playerToMoveColoredPiecesBitboard,otherPlayerColoredPiecesBitboard,square);
+                piece_moves |= bishopMove(otherPlayerColoredPiecesBitboard,playerToMoveColoredPiecesBitboard,square);
+                piece_moves |= rookMove(otherPlayerColoredPiecesBitboard,playerToMoveColoredPiecesBitboard,square);
                 break;
             case PAWN:
                 piece_moves |= pawnMove(gameState,piece, pieceClipFileA, pieceClipFileH);
@@ -132,14 +126,14 @@ uint64_t PseudoLegalMoveGenerator::kingMove(GameState& gamestate, uint64_t piece
 {
     uint64_t king_moves = ((pieceClipFileA << 7) | (piece << 8) | (pieceClipFileH << 9) | (pieceClipFileA >> 1) |
                            (pieceClipFileH << 1) | (pieceClipFileA >> 9) | (piece >> 8) | (pieceClipFileH >> 7));
-    return king_moves & ~gamestate.getBoard()->getPiecesByColor(gamestate.getPlayerToMove());
+    return king_moves & ~gamestate.getBoard()->getAllPiecesBitboardsByColor(gamestate.getPlayerToMove());
 }
 
 uint64_t PseudoLegalMoveGenerator::knightMove(GameState& gamestate,uint64_t &piece_moves, uint64_t pieceClipFileAB, uint64_t pieceClipFileA, uint64_t pieceClipFileH, uint64_t pieceClipFileGH)
 {
     piece_moves = ((pieceClipFileAB << 6) | (pieceClipFileA << 15) | (pieceClipFileH << 17) | (pieceClipFileGH << 10) |
                     (pieceClipFileGH >> 6) | (pieceClipFileH >> 15) | (pieceClipFileA >> 17) | (pieceClipFileAB >> 10));
-    return  piece_moves & ~gamestate.getBoard()->getPiecesByColor(gamestate.getPlayerToMove());
+    return  piece_moves & ~gamestate.getBoard()->getAllPiecesBitboardsByColor(gamestate.getPlayerToMove());
 }
 
 uint64_t PseudoLegalMoveGenerator::pawnMove(GameState& gamestate,uint64_t &piece, uint64_t &pieceClipFileA, uint64_t &pieceClipFileH)
@@ -153,19 +147,20 @@ uint64_t PseudoLegalMoveGenerator::pawnMove(GameState& gamestate,uint64_t &piece
         pawnTwoStep = (SHIFT_SIGN(playerToMove, piece, 16));
     }
 
-    uint64_t validMoves = (pawnOneStep & ~gamestate.getBoard()->getPiecesByColor(ALL)) | (pawnTwoStep & ~gamestate.getBoard()->getPiecesByColor(ALL));
+    uint64_t validMoves = (pawnOneStep & ~gamestate.getBoard()->getAllPiecesBitboardsByColor(ALL)) | (pawnTwoStep & ~gamestate.getBoard()->getAllPiecesBitboardsByColor(ALL));
 
     uint64_t pawnAttackLeft = SHIFT_SIGN(playerToMove, (((playerToMove == WHITE) ? pieceClipFileA : pieceClipFileH)), 7);
     uint64_t pawnAttackRight = SHIFT_SIGN(playerToMove, (((playerToMove == WHITE) ? pieceClipFileH : pieceClipFileA)), 9);
 
-    uint64_t validAttacks = (pawnAttackLeft | pawnAttackRight) & gamestate.getBoard()->getPiecesByColor(~playerToMove);
+    uint64_t validAttacks = (pawnAttackLeft | pawnAttackRight) & gamestate.getBoard()->getAllPiecesBitboardsByColor(~playerToMove);
 
     return validAttacks | validMoves;
 }
 
-std::shared_ptr<std::vector<move>> PseudoLegalMoveGenerator::generateMove(GameState& gameState, PieceType pieceType)
+std::shared_ptr<std::vector<std::shared_ptr<ply>>> PseudoLegalMoveGenerator::generateMove(GameState& gameState, PieceType pieceType)
 {
-    auto pieceMovesLegalVec = std::make_shared<std::vector<move>>();
+    auto pieceMovesLegalVec = std::make_shared<std::vector<std::shared_ptr<ply>>>();
+    
     auto allMoveBoards = getMoveBitboardSquareCollection(gameState,pieceType);
     for(auto& [board,square] : *allMoveBoards)
     {
@@ -173,15 +168,14 @@ std::shared_ptr<std::vector<move>> PseudoLegalMoveGenerator::generateMove(GameSt
         {
             uint8_t targetSquare = std::__countr_zero(board);
 
-            move move = {0,0,0,0,0};
-            move.sourceSquare = square;
-            move.moveBoard = board & (1ull << targetSquare);
-            move.targetSquare = targetSquare;
+            std::shared_ptr<ply> singleMove = std::make_shared<ply>();
+            singleMove->sourceSquare = square;
+            singleMove->targetSquare = targetSquare;
             //TODO add promotion, castle implications
-            move.castleInfo = 0;
-            move.enPassantSquare = 0;
+            singleMove->castleInfo = 0;
+            singleMove->enPassantSquare = 0;
             board &= ~(1ull << targetSquare);
-            pieceMovesLegalVec->push_back(move);
+            pieceMovesLegalVec->push_back(singleMove);
         }
         
     }

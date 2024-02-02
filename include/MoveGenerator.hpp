@@ -3,7 +3,8 @@
 #include "GameState.hpp"
 class MoveGenerator {
     public:
-        virtual std::shared_ptr<std::vector<move>> generateMoves(std::shared_ptr<GameState> gameState);
+        virtual std::shared_ptr<std::vector<std::shared_ptr<ply>>> generateMoves(GameState& gameState) = 0;
+//        virtual ~MoveGenerator() = default;
     private:
 };
 #endif

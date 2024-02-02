@@ -28,7 +28,7 @@ class Engine{
         void loadPositon(const std::string& fen,std::string moves);
         void startCalculation(std::shared_ptr<GoParams>);
         void interruptCalculation() { this->stopCalculation = true; }
-        void setMoveAsBest(const move& move);
+        void setMoveAsBest(const ply& move);
         Engine() : isCalculating(false), stopCalculation(false), game(nullptr) {}
         std::string bestMove;
     private:

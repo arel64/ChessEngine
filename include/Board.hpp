@@ -1,12 +1,13 @@
 #ifndef MACRO_BOARD_HPP
 #define MACRO_BOARD_HPP
-    #include "Color.hpp"
+    #include "PieceColoredType.hpp"
     #include <cstdint>
     #include <cstdio>
     #include <cassert>
     #include <memory>
     #include <utility>
     #include <vector>
+    
     using namespace PlayerColors;
 
     
@@ -38,17 +39,7 @@
     #define BLACK_QUEEN_START (0x0800000000000000)
     #define BLACK_KING_START (0x1000000000000000)
     
-    enum Direction
-    {
-        NORTH = BOARD_DIM,
-        SOUTH = -BOARD_DIM,
-        EAST = 1,
-        WEST = -1,
-        NORTH_EAST = NORTH + EAST,
-        NORTH_WEST = NORTH + WEST,
-        SOUTH_EAST = SOUTH + EAST,
-        SOUTH_WEST = SOUTH + WEST
-    };
+    
     enum BoardRank
     {
         RANK_1 = 0,
@@ -85,40 +76,20 @@
         A8, B8, C8, D8, E8, F8, G8, H8
 
     };
-  
+    struct ply{
+        uint8_t sourceSquare;
+        uint8_t targetSquare;
+        PieceType sourcePiece;
+        PieceType targetPiece;
 
-    namespace NS_PieceType
-    {
-        enum PieceType
-        {
-            PAWN,
-            KNIGHT,
-            BISHOP,
-            ROOK,
-            QUEEN,
-            KING,
-            NO_PIECE
-        };
-        static const PieceType AllPieces[] = {PAWN,KNIGHT,BISHOP,ROOK,QUEEN,KING};
-        static const PieceType AllPiecesEnum[] = {PAWN,KNIGHT,BISHOP,ROOK,QUEEN,KING,NO_PIECE};
-      
-    }
-    using namespace NS_PieceType;
-    struct move{
-      uint8_t sourceSquare;
-      uint8_t targetSquare;
+        uint8_t castleInfo;
+        bool passant_capture;   
+        uint16_t enPassantSquare;
 
+        bool promotion;
+        PieceType promotion_piece;
 
-      uint64_t moveBoard; 
-
-      uint8_t castleInfo;
-      bool passant_capture;   
-      uint16_t enPassantSquare;
-
-      bool promotion;
-      PieceType promotion_piece;
-
-    }typedef move;
+    }typedef ply;
     
     class Board
     {
@@ -129,12 +100,13 @@
                         other->m_blackPawns, other->m_blackKnights, other->m_blackBishops, other->m_blackRooks, other->m_blackQueens, other->m_blackKing){};
             Board(uint64_t whitePawns, uint64_t whiteKnights, uint64_t whiteBishops, uint64_t whiteRooks, uint64_t whiteQueens, uint64_t whiteKing,
                 uint64_t blackPawns, uint64_t blackKnights, uint64_t blackBishops, uint64_t blackRooks, uint64_t blackQueens, uint64_t blackKing);
-            Board(std::shared_ptr<Board>board,move move);
+            Board(std::shared_ptr<std::vector<PieceFamilyBitboard>>);
+            Board(std::shared_ptr<Board>board,ply move);
             void printBoard();
-            uint64_t getPieceBitBoard(PieceType pieceType, Color color);
-            std::pair<PieceType, Color> getPieceOnSquare(uint8_t square);
+            uint64_t getPieceFamilyBitBoard(PieceFamily& pieceFamily);
+            uint64_t* getPieceFamilyBitboardPtrOnSquare(uint8_t square);
             inline static uint8_t getSquare(uint64_t occ) { return occ==0 ?  0: std::__countr_zero(occ);}//TOOD RENAME
-            constexpr uint64_t getPiecesByColor(Color color){{
+            constexpr uint64_t getAllPiecesBitboardsByColor(Color color){{
                 if(color == WHITE)
                 {
                     return ALL_WHITE_PIECES;
@@ -147,14 +119,9 @@
                     return ALL_PIECES;
                 }
             }}
-            static bool isSquaresWithinSameRow(uint8_t square1,uint8_t square2);
-            static bool isSquareWithinBoard(uint8_t square);
-            static bool isSquareOnRank(uint8_t square,BoardRank rank);
-            static bool isSquareWithinDirection(uint8_t square,uint8_t squareInDirection,Direction direction);
-            static bool isOnSamePositiveDiagonal(uint8_t square,uint8_t squareInDirection);
-            static bool isOnSameNegativeDiagonal(uint8_t square,uint8_t squareInDirection);
         private:
-
+            uint64_t* getPieceFamilyBitBoardPtr(PieceFamily& pieceFamily);
+            void setPieceBitBoard(PieceFamilyBitboard& piecefamily);
 
         /*
             This is a bitboard representation of the board
@@ -173,9 +140,6 @@
             uint64_t m_blackRooks;
             uint64_t m_blackQueens;
             uint64_t m_blackKing;
-            //std::vector<uint64_t> m_allPieces;
-        private:
-            void setPieceBitBoard(PieceType pieceType, Color color,int64_t bitBoard);
 
     };
 #endif

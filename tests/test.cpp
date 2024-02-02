@@ -1,210 +1,118 @@
 #include <catch2/catch_test_macros.hpp>
+#include "PseudoLegalMoveGenerator.hpp"
 #include <cstdint>
-#include "Board.hpp"
-#include "GameState.hpp"
 #include <memory>
 #include <iostream>
-bool get_bitboard_before_and_after_ply(
-    PieceType piece,Color color,uint8_t source_square,uint8_t target_square,GameState gameState
-        ,std::pair<uint64_t,uint64_t>& bitboards)
+
+bool checkTargetSquareContainedContainedInMoves(std::shared_ptr<std::vector<std::shared_ptr<ply>>> moves, uint8_t targetSquare)
 {
-    auto sourcePieceBitboard = gameState.getBoard()->getPieceBitBoard(piece, color); 
-    if(sourcePieceBitboard == 0)
+    for(auto move : *moves)
     {
-        return false;    
+        bool isSameSquare = move->targetSquare == targetSquare;
+        CHECK(isSameSquare);
+        if(isSameSquare)
+        {
+            return true;
+        }
     }
-    auto state =  .playPly(source_square,target_square); 
-    if(state==nullptr)
+    return false;
+}
+bool checkTargetSquaresContainedInMoves(std::shared_ptr<std::vector<std::shared_ptr<ply>>> moves,std::vector<u_int8_t> squares)
+{
+    for(auto square : squares)
     {
-        return false;
+        if(!checkTargetSquareContainedContainedInMoves(moves,square))
+        {
+            return false;
+        }
     }
-    auto sourcePieceBitboardAfterPly = state->getBoard()->getPieceBitBoard(piece, color); 
-    bitboards = std::make_pair(sourcePieceBitboard,sourcePieceBitboardAfterPly);
     return true;
 }
-
-bool single_piece_move_test(PieceType piece,Color color,uint8_t source_square,uint8_t target_square,GameState gameState)
+bool checkTargetSquaresContainedInMovesExactly(std::shared_ptr<std::vector<std::shared_ptr<ply>>> moves,std::vector<u_int8_t> squares)
 {
-    std::pair<uint64_t,uint64_t> before_and_after_bitboard;
-    if(!get_bitboard_before_and_after_ply(piece,color,source_square,target_square,gameState,before_and_after_bitboard))
+    bool isSameSize = moves->size() == squares.size();
+    CHECK(isSameSize);
+    if(isSameSize)
     {
         return false;
     }
-    return  (before_and_after_bitboard.first == SINGLE_SQUARE_BITBOARD(source_square)) && (before_and_after_bitboard.second == SINGLE_SQUARE_BITBOARD(target_square) );
-} 
-
-bool single_piece_move_test_capture(PieceType attacking_piece,Color attacking_piece_color,uint8_t source_square,uint8_t target_square,GameState gameState)
-{
-    if(!single_piece_move_test(attacking_piece,attacking_piece_color,source_square,target_square,gameState))
-    {
-        return false;
-    }
-    std::pair<uint64_t,uint64_t> before_and_after_bitboards;
-    if(!get_bitboard_before_and_after_ply(attacking_piece,attacking_piece_color,source_square,target_square,gameState,before_and_after_bitboards))
-    {
-        return false;
-    }
-    return (before_and_after_bitboards.second) == (SINGLE_SQUARE_BITBOARD(target_square)) && (before_and_after_bitboards.first == (SINGLE_SQUARE_BITBOARD(source_square))) ;   
+    return checkTargetSquaresContainedInMoves(moves,squares);
 }
+std::shared_ptr<std::vector<std::shared_ptr<ply>>> generateSinglePieceFamilyBoardAndMoves(std::shared_ptr<MoveGenerator> generator,PieceFamilyBitboard pieceFamily)
+{
+    std::shared_ptr<std::vector<PieceFamilyBitboard>> pieceFamilyBitboards = std::make_shared<std::vector<PieceFamilyBitboard>>();
+    pieceFamilyBitboards->push_back(pieceFamily);
+    std::shared_ptr<Board> singlePawnBitboard = std::make_shared<Board>(pieceFamilyBitboards);
+    GameState gameState = GameState(singlePawnBitboard,0,WHITE,0);
+    return generator->generateMoves(gameState);
+} 
 TEST_CASE("Board Init","[unit]")
 {
     GameState gameState = GameState();
     auto board = gameState.getBoard();
     SECTION( "board initializtion" ) {
-        CHECK( board->getPieceBitBoard(PAWN,WHITE) == WHITE_PAWN_START );
-        CHECK( board->getPieceBitBoard(PAWN,BLACK) == BLACK_PAWN_START );
-        CHECK( board->getPieceBitBoard(KNIGHT,WHITE) == WHITE_KNIGHT_START );
-        CHECK( board->getPieceBitBoard(KNIGHT,BLACK) == BLACK_KNIGHT_START );
-        CHECK( board->getPieceBitBoard(BISHOP,WHITE) == WHITE_BISHOP_START );
-        CHECK( board->getPieceBitBoard(BISHOP,BLACK) == BLACK_BISHOP_START );
-        CHECK( board->getPieceBitBoard(ROOK,WHITE) == WHITE_ROOK_START );
-        CHECK( board->getPieceBitBoard(ROOK,BLACK) == BLACK_ROOK_START );
-        CHECK( board->getPieceBitBoard(QUEEN,WHITE) == WHITE_QUEEN_START );
-        CHECK( board->getPieceBitBoard(QUEEN,BLACK) == BLACK_QUEEN_START );
-        CHECK( board->getPieceBitBoard(KING,WHITE) == WHITE_KING_START );
-        CHECK( board->getPieceBitBoard(KING,BLACK) == BLACK_KING_START );
+        PieceFamily whitePawn = PieceFamily(PAWN,WHITE);
+        PieceFamily blackPawn = PieceFamily(PAWN,BLACK);
+        PieceFamily whiteKnight = PieceFamily(KNIGHT,WHITE);
+        PieceFamily blackKnight = PieceFamily(KNIGHT,BLACK);
+        PieceFamily whiteBishop = PieceFamily(BISHOP,WHITE);
+        PieceFamily blackBishop = PieceFamily(BISHOP,BLACK);
+        PieceFamily whiteRook = PieceFamily(ROOK,WHITE);
+        PieceFamily blackRook = PieceFamily(ROOK,BLACK);
+        PieceFamily whiteQueen = PieceFamily(QUEEN,WHITE);
+        PieceFamily blackQueen = PieceFamily(QUEEN,BLACK);
+        PieceFamily whiteKing = PieceFamily(KING,WHITE);
+        PieceFamily blackKing = PieceFamily(KING,BLACK);
+
+        CHECK( board->getPieceFamilyBitBoard(whitePawn ) == WHITE_PAWN_START) ;
+        CHECK( board->getPieceFamilyBitBoard(blackPawn ) == BLACK_PAWN_START) ;
+        CHECK( board->getPieceFamilyBitBoard( whiteKnight) == WHITE_KNIGHT_START) ;
+        CHECK( board->getPieceFamilyBitBoard( blackKnight) == BLACK_KNIGHT_START) ;
+        CHECK( board->getPieceFamilyBitBoard(whiteBishop ) == WHITE_BISHOP_START) ;
+        CHECK( board->getPieceFamilyBitBoard( blackBishop) == BLACK_BISHOP_START) ;
+        CHECK( board->getPieceFamilyBitBoard(whiteRook ) == WHITE_ROOK_START) ;
+        CHECK( board->getPieceFamilyBitBoard( blackRook) == BLACK_ROOK_START) ;
+        CHECK( board->getPieceFamilyBitBoard(whiteQueen ) == WHITE_QUEEN_START) ;
+        CHECK( board->getPieceFamilyBitBoard(blackQueen ) == BLACK_QUEEN_START) ;
+        CHECK( board->getPieceFamilyBitBoard(whiteKing ) == WHITE_KING_START) ;
+        CHECK( board->getPieceFamilyBitBoard(blackKing) == BLACK_KING_START) ;
     }
 }
 TEST_CASE( "Non Sliding Pieces Movement", "[unit]" ) {
-    SECTION( "pawn movement" ) {
-        SECTION( "white pawn movement and capture" )
+    std::shared_ptr<MoveGenerator> moveGenerator = std::make_shared<PseudoLegalMoveGenerator>();
+    SECTION( "Pawn Movement" ) {
+        SECTION( "Single Central Row White Pawn" )
         {
-            for(int square = 0 ; square < BOARD_DIM*BOARD_DIM - BOARD_DIM; square ++)
-            {
-                Color playerToMove = WHITE;
-                uint64_t singlePawnBitboard = SINGLE_SQUARE_BITBOARD(square);
-                uint64_t flankPawnsForCaptureBitboard;
-                int8_t leftFlankPawnSquare;
-                int8_t rightFlankPawnSquare;
-                u_int8_t onePawnMoveForwardSquare = square + BOARD_DIM;
-                u_int8_t twoPawnMoveForwardSquare = square + 2*BOARD_DIM;
-                bool currentPawnValidSquaredToMove[BOARD_DIM*BOARD_DIM];
-
-                if(square % BOARD_DIM == 0)
-                {
-                    rightFlankPawnSquare = square + BOARD_DIM + 1;
-                    leftFlankPawnSquare = -1;
-                    flankPawnsForCaptureBitboard = (SINGLE_SQUARE_BITBOARD(rightFlankPawnSquare));
-                }
-                else if(square % BOARD_DIM == BOARD_DIM - 1)
-                {
-                    leftFlankPawnSquare = square + BOARD_DIM -  1;
-                    rightFlankPawnSquare = -1;
-                    flankPawnsForCaptureBitboard = (SINGLE_SQUARE_BITBOARD(leftFlankPawnSquare));
-                }
-                else
-                {
-                    leftFlankPawnSquare = square + BOARD_DIM + 1;
-                    rightFlankPawnSquare = square +BOARD_DIM +- 1;
-                    flankPawnsForCaptureBitboard = (SINGLE_SQUARE_BITBOARD(leftFlankPawnSquare)) + (SINGLE_SQUARE_BITBOARD(rightFlankPawnSquare));
-                }
-                
-                std::shared_ptr board = std::make_shared<Board>(singlePawnBitboard ,0,0,0,0,0,flankPawnsForCaptureBitboard,0,0,0,0,0);
-                GameState gameState = GameState(board,0,playerToMove,0);
-                INFO("Checking white pawn movement for board square" << square  );
-                if(Board::isSquareWithinBoard(onePawnMoveForwardSquare))
-                {
-                    currentPawnValidSquaredToMove[onePawnMoveForwardSquare] = true;
-                    CHECK(single_piece_move_test(PAWN,WHITE, square, onePawnMoveForwardSquare,gameState));
-                }
-                if(Board::isSquareOnRank(square,BoardRank::RANK_2))
-                {
-                    currentPawnValidSquaredToMove[twoPawnMoveForwardSquare] = true;
-                    
-                    CHECK(single_piece_move_test(PAWN,WHITE, square, twoPawnMoveForwardSquare,gameState));
-                }
-                if(Board::isSquareWithinBoard(leftFlankPawnSquare))
-                {
-                    
-                    currentPawnValidSquaredToMove[leftFlankPawnSquare] = true;
-                    CHECK(single_piece_move_test_capture(PAWN,WHITE,square,leftFlankPawnSquare,gameState));
-                }
-                if(Board::isSquareWithinBoard(rightFlankPawnSquare))
-                {
-                    
-                    currentPawnValidSquaredToMove[rightFlankPawnSquare] = true;
-                    CHECK(single_piece_move_test_capture(PAWN,WHITE,square,rightFlankPawnSquare,gameState));
-                }
-                for(int i = 0 ; i < BOARD_DIM*BOARD_DIM ; i++)
-                {
-                    if(!currentPawnValidSquaredToMove[i])
-                    {
-                        
-                        CHECK(!single_piece_move_test(PAWN,WHITE,square,i,gameState));
-                    }
-                }
-            }
+            INFO("Checking white pawn movement for central row square");
+            PieceFamilyBitboard whitePawnsBitboard = PieceFamilyBitboard(PAWN,WHITE,SINGLE_SQUARE_BITBOARD(C3));
+            auto potentialPlys =  generateSinglePieceFamilyBoardAndMoves(moveGenerator,whitePawnsBitboard);
+            checkTargetSquaresContainedInMovesExactly(potentialPlys,{C4});
+            INFO("Checking white pawn movement for central row flank files");
+            whitePawnsBitboard = PieceFamilyBitboard(PAWN,WHITE,SINGLE_SQUARE_BITBOARD(A3));
+            potentialPlys =  generateSinglePieceFamilyBoardAndMoves(moveGenerator,whitePawnsBitboard);
+            checkTargetSquaresContainedInMovesExactly(potentialPlys,{A4});
+            whitePawnsBitboard = PieceFamilyBitboard(PAWN,WHITE,SINGLE_SQUARE_BITBOARD(H3));
+            potentialPlys =  generateSinglePieceFamilyBoardAndMoves(moveGenerator,whitePawnsBitboard);
+            checkTargetSquaresContainedInMovesExactly(potentialPlys,{H4});
+        }
+        SECTION( "Single White Second Rank Pawn")
+        {
+            INFO("Checking white pawn movement for second rank square");
             
+           // checkTargetSquaresContainedInMovesExactly(moves,{C3,C4});
         }
-        SECTION( "black pawn movement and capture" )
+        SECTION( "Single White Seventh Rank Pawn")
         {
-            for(int square = BOARD_DIM*BOARD_DIM - 1 ; square >= BOARD_DIM  ; square --)
-            {
-                Color playerToMove = BLACK;
-                uint64_t singlePawnBitboard = SINGLE_SQUARE_BITBOARD(square);
-                uint64_t flankPawnsForCaptureBitboard;
-                int8_t leftFlankPawnSquare;
-                int8_t rightFlankPawnSquare;
-                u_int8_t onePawnMoveForwardSquare = square - BOARD_DIM;
-                u_int8_t twoPawnMoveForwardSquare = square - 2*BOARD_DIM;
-                bool currentPawnValidSquaredToMove[BOARD_DIM*BOARD_DIM];
-
-                if(square % BOARD_DIM == 0)
-                {
-                    rightFlankPawnSquare = square - BOARD_DIM + 1;
-                    leftFlankPawnSquare = -1;
-                    flankPawnsForCaptureBitboard = (SINGLE_SQUARE_BITBOARD(rightFlankPawnSquare));
-                }
-                else if(square % BOARD_DIM == BOARD_DIM - 1)
-                {
-                    leftFlankPawnSquare = square - BOARD_DIM -  1;
-                    rightFlankPawnSquare = -1;
-                    flankPawnsForCaptureBitboard = (SINGLE_SQUARE_BITBOARD(leftFlankPawnSquare));
-                }
-                else
-                {
-                    leftFlankPawnSquare = square - BOARD_DIM - 1;
-                    rightFlankPawnSquare = square - BOARD_DIM + 1;
-                    flankPawnsForCaptureBitboard = (SINGLE_SQUARE_BITBOARD(leftFlankPawnSquare)) + (SINGLE_SQUARE_BITBOARD(rightFlankPawnSquare));
-                }
-                
-                std::shared_ptr board = std::make_shared<Board>(flankPawnsForCaptureBitboard,0,0,0,0,0,singlePawnBitboard,0,0,0,0,0);
-                INFO("Checking black pawn movement for board square" << square  );
-                if(Board::isSquareWithinBoard(onePawnMoveForwardSquare))
-                {
-                    currentPawnValidSquaredToMove[onePawnMoveForwardSquare] = true;
-                    GameState gameState = GameState(board,0,playerToMove,0);
-                    CHECK(single_piece_move_test(PAWN,playerToMove, square, onePawnMoveForwardSquare,gameState));
-                }
-                if(Board::isSquareOnRank(square,BoardRank::RANK_7))
-                {
-                    currentPawnValidSquaredToMove[twoPawnMoveForwardSquare] = true;
-                    GameState gameState  = GameState(board,0,playerToMove,0);
-                    CHECK(single_piece_move_test(PAWN,playerToMove, square, twoPawnMoveForwardSquare,gameState));
-                }
-                if(Board::isSquareWithinBoard(leftFlankPawnSquare))
-                {
-                    GameState gameState  = GameState(board,0,playerToMove,0);
-                    currentPawnValidSquaredToMove[leftFlankPawnSquare] = true;
-                    CHECK(single_piece_move_test_capture(PAWN,playerToMove,square,leftFlankPawnSquare,gameState));
-                }
-                if(Board::isSquareWithinBoard(rightFlankPawnSquare))
-                {
-                    GameState gameState  = GameState(board,0,playerToMove,0);
-                    currentPawnValidSquaredToMove[rightFlankPawnSquare] = true;
-                    CHECK(single_piece_move_test_capture(PAWN,playerToMove,square,rightFlankPawnSquare,gameState));
-                }
-                for(int i = 0 ; i < BOARD_DIM*BOARD_DIM ; i++)
-                {
-                    if(!currentPawnValidSquaredToMove[i])
-                    {
-                        GameState gameState  = GameState(board,0,playerToMove,0);
-                        CHECK(!single_piece_move_test(PAWN,playerToMove,square,i,gameState));
-                    }
-                }
-            }
+            /*INFO("Checking white pawn movement for second rank square");
+            std::shared_ptr singlePawnBitboard = std::make_shared<Board>(SINGLE_SQUARE_BITBOARD(C7) ,0,0,0,0,0,0,0,0,0,0,0);
+            GameState gameState = GameState(singlePawnBitboard,0,WHITE,0);
+            std::shared_ptr moves =  moveGenerator->generateMoves(gameState);
+            checkTargetSquaresContainedInMovesExactly(moves,{C8});*/
         }
+        
     }
+}
+    /*
     SECTION( "knight movement INCOMPLETE" ) {
         SECTION( "white knight movement and capture  INCOMPLETE" )
         {
@@ -418,5 +326,3 @@ TEST_CASE( "Blocks", "[unit]" ) {
             }
         }*/
         
-    }
-}

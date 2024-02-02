@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.2)
 Include(FetchContent)
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v3.0.1 # or a later release
+)
+
+FetchContent_MakeAvailable(Catch2)
 
 project(
     chess_engine
@@ -12,15 +19,10 @@ include_directories( ${CMAKE_SOURCE_DIR}/include )
 
 file(GLOB SOURCES "./src/*.cpp" "./include/**.hpp")
 file(GLOB SOURCES_TEST "tests/*.cpp" "tests/*.hpp")
-add_executable(chess_engine_main main.cpp ${SOURCES})
+add_executable(chess_engine_main main.cpp ${SOURCES} ${SOURCES_TEST})
 
-FetchContent_Declare(
-  Catch2
-  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG        v3.0.1 # or a later release
-)
 
-FetchContent_MakeAvailable(Catch2)
 
 add_executable(tests ${SOURCES_TEST} ${SOURCES})
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
+target_link_libraries(chess_engine_main PRIVATE Catch2::Catch2WithMain)
