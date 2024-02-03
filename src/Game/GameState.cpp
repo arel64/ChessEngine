@@ -27,8 +27,8 @@ GameState::GameState(std::shared_ptr<Board>board,uint8_t castleInfo,Color player
     m_enPassantSquare = enPassantSquare;
     m_board = board;    
 }
-GameState::GameState(const GameState& other,Ply ply) : 
-    GameState(std::make_shared<Board>( m_board,ply),other.m_castleInfo,~other.m_playerToMove,other.m_enPassantSquare){}
+GameState::GameState(const GameState& other,Ply& ply) : 
+    GameState(std::make_shared<Board>( other.m_board,ply),other.m_castleInfo,~other.m_playerToMove,other.m_enPassantSquare){}
 GameState::~GameState()
 {
 }

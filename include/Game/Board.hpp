@@ -87,7 +87,7 @@
             Board(uint64_t whitePawns, uint64_t whiteKnights, uint64_t whiteBishops, uint64_t whiteRooks, uint64_t whiteQueens, uint64_t whiteKing,
                 uint64_t blackPawns, uint64_t blackKnights, uint64_t blackBishops, uint64_t blackRooks, uint64_t blackQueens, uint64_t blackKing);
             Board(std::shared_ptr<std::vector<PieceFamilyBitboard>>);
-            Board(std::shared_ptr<Board>board,Ply ply);
+            Board(std::shared_ptr<Board>board,Ply& ply);
             void printBoard();
             uint64_t getPieceFamilyBitBoard(PieceFamily& pieceFamily);
             uint64_t* getPieceFamilyBitboardPtrOnSquare(uint8_t square);

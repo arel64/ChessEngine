@@ -22,7 +22,8 @@ void PseudoLegalMoveGenerator::removeIllegalMoves(GameState& gameState,std::shar
 {
     for(auto it = pseduolegalMoves->begin(); it != pseduolegalMoves->end();)
     {
-        GameState appliedMoveState = GameState(gameState,*(*it));
+        auto ply = it->get();
+        GameState appliedMoveState = GameState(gameState,*ply);
         if(isEnemyKingThreatened(appliedMoveState))
         {
             it = pseduolegalMoves->erase(it);
