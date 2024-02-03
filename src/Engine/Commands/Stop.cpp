@@ -8,5 +8,11 @@ int Go::execute()
 Go::Go(std::shared_ptr<std::vector<std::string>> arglist,std::shared_ptr<Engine> engine) :
             UCICommand(arglist,engine)
 {
-    kill(engine->getPid(),SIGUSR1);
+    pid_t pid = engine->getPid();
+    if(pid == 0)
+    {
+        std::cerr << "Attempt to stop non existing calculation" << std::endl;
+        return;
+    }
+    kill(pid,SIGUSR1);
 }

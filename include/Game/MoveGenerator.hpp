@@ -2,7 +2,6 @@
 #define MACRO_MOVEGENERATOR_HPP
 #include "GameState.hpp"
 #include "unordered_map"
-#include "UCICommand.hpp"
 
 class MoveGenerator {
     public:

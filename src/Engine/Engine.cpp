@@ -3,8 +3,9 @@
 #include <memory>
 #include <unistd.h>
 #include <vector>
+#include <signal.h>
 
-std::vector<std::string> Helper::split(const std::string& input, char delimiter) {
+std::vector<std::string> split(const std::string& input, char delimiter) {
     std::vector<std::string> result;
     std::istringstream iss(input);
     std::string token;
@@ -14,11 +15,33 @@ std::vector<std::string> Helper::split(const std::string& input, char delimiter)
     }
     return result;
 }
-
+std::shared_ptr<Ply> Engine::getCurrentBestPly()
+{
+    return this->calculationState.bestPly;
+}
+sighandler_t interruptCalculation(int signum, sighandler_t handler)
+{
+        /*
+        {
+            std::shared_ptr<Ply> ply = getCurrentBestPly();
+            std::""cout"" << "bestmove " << toLongAlgebraicNotation(ply) << std::endl;
+            exit(0);
+        });
+        */
+    
+}
 void Engine::startCalculation(std::shared_ptr<GoParams>)
 {
     this->calculationState.isCalculating = true;
     int pid = fork();
+    int pipefd[2] , writefd , readfd;
+    readfd = pipefd[0];
+    writefd = pipefd[1];
+    if(pipe(pipefd) == -1)
+    {
+        std::cerr << "Failed to create pipe" << std::endl;
+        throw std::runtime_error("Failed to create pipe");
+    }
     if(pid < 0)
     {
         std::cerr << "Failed to fork" << std::endl;
@@ -26,17 +49,25 @@ void Engine::startCalculation(std::shared_ptr<GoParams>)
     }
     else if(pid == 0)
     {
-
+        signal(SIGUSR1,interruptCalculation);
         //Temporary!!! This should be replaced with the actual calculation
-        auto bestPly = this->moveGenerator->generateMoves(*this->game);
-        this->setPlyAsBest(bestPly->at(0));
+        auto plys = this->moveGenerator->generateMoves(*this->game);
+        this->setPlyAsBest(plys->at(0));
         exit(0);
     }
 }
 
+int Engine::getPid()
+{
+    if(!this->calculationState.isCalculating)
+    {
+        return 0;
+    }
+    return this->calculationState.pid;
+}
 void Engine::setPlyAsBest(std::shared_ptr<Ply> ply)
 {
-    this->bestPly = ply;
+    this->calculationState.bestPly = ply;
 }
 
 std::string Engine::getSquareName(uint8_t square)
@@ -58,7 +89,7 @@ void Engine::loadPositon(const std::string& fen,std::string moves)
 {  
     //TODO:: This should stop calculations
     this->game = std::make_shared<GameState>(fen);
-    std::vector<std::string> moveVec = Helper::split(moves,' ');
+    std::vector<std::string> moveVec = split(moves,' ');
     //Remove the "moves" string
     if(moveVec.size() > 0)
     {

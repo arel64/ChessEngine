@@ -1,10 +1,10 @@
 #ifndef MACRO_ENGINE_HPP
 #define MACRO_ENGINE_HPP
 #include "GameState.hpp"
+#include "MoveGenerator.hpp"
 #include <atomic>
 #include <cstdint>
 #include <memory>
-#include "MoveGenerator.hpp"
 #define ENGINE_NAME "FAF Engine"
 #define ENGINE_AUTHOR "Arel Sharon"
 struct GoParams
@@ -44,11 +44,14 @@ class Engine{
         void loadPositon(const std::string& fen,std::string moves);
         void startCalculation(std::shared_ptr<GoParams>);
         void setPlyAsBest(std::shared_ptr<Ply> ply);
+        std::shared_ptr<Ply> getCurrentBestPly();
         void reset();
         
+        pid_t getPid();
         std::string GetName(){return ENGINE_NAME;};
         std::string GetAuthor(){return ENGINE_AUTHOR;};
         
+
     private:
         CalculationState calculationState;
         std::shared_ptr<GameState> game;
@@ -56,5 +59,6 @@ class Engine{
     private:
         std::string getSquareName(uint8_t square);
         uint8_t getSquareFromName(std::string squareName);
+        sighandler_t interruptCalculation(int signum, sighandler_t handler);
 };
 #endif
