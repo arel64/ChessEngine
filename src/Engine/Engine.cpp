@@ -1,27 +1,42 @@
 #include "Engine.hpp"
 #include "GameState.hpp"
 #include <memory>
+#include <unistd.h>
 #include <vector>
+
+std::vector<std::string> Helper::split(const std::string& input, char delimiter) {
+    std::vector<std::string> result;
+    std::istringstream iss(input);
+    std::string token;
+
+    while (std::getline(iss, token, delimiter)) {
+        result.push_back(token);
+    }
+    return result;
+}
+
 void Engine::startCalculation(std::shared_ptr<GoParams>)
 {
-    this->isCalculating = true;
-    while(!this->stopCalculation)
+    this->calculationState.isCalculating = true;
+    int pid = fork();
+    if(pid < 0)
     {
-       // auto move  = this->game->getMoveInfoVec()->at(0);
-       // setMoveAsBest(move);
-        this->stopCalculation = true;
+        std::cerr << "Failed to fork" << std::endl;
+        throw std::runtime_error("Failed to fork");
+    }
+    else if(pid == 0)
+    {
+
+        //Temporary!!! This should be replaced with the actual calculation
+        auto bestPly = this->moveGenerator->generateMoves(*this->game);
+        this->setPlyAsBest(bestPly->at(0));
+        exit(0);
     }
 }
 
-void Engine::setMoveAsBest(const Ply& move)
+void Engine::setPlyAsBest(std::shared_ptr<Ply> ply)
 {
-    //std::string move = getSquareName(move.sourceSquare) + getSquareName(move.targetSquare);
-    //TODO:: Add promotion piece
-    /*if (move.promotion_piece != NS_PieceType::NO_PIECE) {
-        move += move.promotion_piece;
-    }*/
-
-    //this->bestMove = move;
+    this->bestPly = ply;
 }
 
 std::string Engine::getSquareName(uint8_t square)
@@ -59,4 +74,15 @@ void Engine::loadPositon(const std::string& fen,std::string moves)
 
     }
     
+}
+Engine::Engine (std::shared_ptr<MoveGenerator> moveGenerator)
+{
+    reset();
+    this->moveGenerator = moveGenerator;
+}
+void Engine::reset()
+{
+    this->moveGenerator = nullptr;
+    this->game = nullptr;
+    this->calculationState.reset();
 }

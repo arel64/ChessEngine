@@ -1,10 +1,10 @@
 #ifndef MACRO_ENGINE_HPP
 #define MACRO_ENGINE_HPP
 #include "GameState.hpp"
-#include "Helper.hpp"
 #include <atomic>
 #include <cstdint>
 #include <memory>
+#include "MoveGenerator.hpp"
 #define ENGINE_NAME "FAF Engine"
 #define ENGINE_AUTHOR "Arel Sharon"
 struct GoParams
@@ -23,21 +23,36 @@ struct GoParams
 
     std::vector<std::string> moves;
 };
+struct CalculationState
+{
+    std::shared_ptr<Ply> bestPly;
+    std::atomic<bool> isCalculating;
+    pid_t pid;
+    int communicationfd;
 
+    void reset()
+    {
+        bestPly = nullptr;
+        isCalculating = false;
+        pid = 0;
+        communicationfd = 0;
+    }
+};
 class Engine{
     public:
+        Engine(std::shared_ptr<MoveGenerator> moveGenerator);
         void loadPositon(const std::string& fen,std::string moves);
         void startCalculation(std::shared_ptr<GoParams>);
-        void interruptCalculation() { this->stopCalculation = true; }
-        void setMoveAsBest(const Ply& move);
+        void setPlyAsBest(std::shared_ptr<Ply> ply);
+        void reset();
+        
         std::string GetName(){return ENGINE_NAME;};
         std::string GetAuthor(){return ENGINE_AUTHOR;};
-        Engine() : isCalculating(false), stopCalculation(false), game(nullptr) {}
-        std::string bestMove;
+        
     private:
-        std::atomic<bool> isCalculating;
-        std::atomic<bool> stopCalculation;
+        CalculationState calculationState;
         std::shared_ptr<GameState> game;
+        std::shared_ptr<MoveGenerator> moveGenerator;
     private:
         std::string getSquareName(uint8_t square);
         uint8_t getSquareFromName(std::string squareName);
