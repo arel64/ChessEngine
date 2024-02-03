@@ -1,5 +1,7 @@
 #include "UCIHandeling.hpp"
 #include <string.h>
+#include "UCICommand.hpp"
+#include "UCICommandGenerator.hpp"
 
 UCIHandeling::UCIHandeling(std::shared_ptr<Engine> engine)
 {
@@ -12,27 +14,28 @@ void UCIHandeling::startCommandHandlerLoop()
 {
     while(this->isRunning)
     {
-        std::vector<std::string> arglist;
+        std::shared_ptr<std::vector<std::string>> arglist = std::make_shared<std::vector<std::string>>();
         std::string line;
         if (!std::getline(std::cin, line)) {
             break;
         }
         char* token = strtok(const_cast<char*>(line.c_str()), " \t\n");
         while (token != nullptr) {
-            arglist.push_back(token);
+            arglist->push_back(token);
             token = strtok(nullptr, " \t\n");
         }
-        if (!arglist.empty()) {
-            if (!getCommandResponse(arglist)) {
+        if (!arglist->empty()) {
+            if (getCommandResponse(arglist)) {
                 break;
             }
         }
     }
 }
-int UCIHandeling::getCommandResponse(std::vector<std::string>& arglist)
+int UCIHandeling::getCommandResponse(std::shared_ptr<std::vector<std::string>> arglist)
 {
-
-    return 0;
+    UCICommandGenerator generator = UCICommandGenerator();
+    std::unique_ptr<UCICommand> command  = generator.generateUCICommand(arglist,this->engine);
+    return command->execute(); 
 }
 int UCIHandeling::startUciHandler()
 {
@@ -40,60 +43,7 @@ int UCIHandeling::startUciHandler()
     startCommandHandlerLoop();
     return 0;
 }
-
-void NS_UCICommands::UCICommand::execute()
-{
-    this->isCommandExectuing = true;
-    switch (command)
-    {
-        case UCICommandName::UCI:
-            this->worker =  std::make_shared<std::thread>(&NS_UCICommands::UCICommand::handleUCICommand,this);
-            break;
-        case UCICommandName::IsReady:
-            this->worker =  std::make_shared<std::thread>(&NS_UCICommands::UCICommand::handleIsReadyCommand,this);
-            break;
-        case UCICommandName::Debug:
-            this->worker =  std::make_shared<std::thread>(&NS_UCICommands::UCICommand::handleDebugCommand,this);
-            break;
-        case UCICommandName::Stop:
-            this->worker =  std::make_shared<std::thread>(&NS_UCICommands::UCICommand::handleStopCommand,this);
-            break;
-        break;
-        case UCICommandName::Quit:
-            this->worker =  std::make_shared<std::thread>(&NS_UCICommands::UCICommand::handleQuitCommand,this);
-            break;
-        break;
-        case UCICommandName::SetOption:
-            this->worker =  std::make_shared<std::thread>(&NS_UCICommands::UCICommand::handleSetOptionCommand,this);
-            break;
-        case UCICommandName::UciNewGame:
-            this->worker =  std::make_shared<std::thread>(&NS_UCICommands::UCICommand::handleUciNewGameCommand,this);
-            break;
-
-        case UCICommandName::Position:
-            this->worker =  std::make_shared<std::thread>(&NS_UCICommands::UCICommand::handlePositionCommand,this);
-            break;
-        case UCICommandName::Go:
-            this->worker =  std::make_shared<std::thread>(&NS_UCICommands::UCICommand::handleGoCommand,this);
-            break;
-        case UCICommandName::Unknown:
-        default:
-            this->worker = nullptr;
-            break;
-    }
-    
-}
-void NS_UCICommands::UCICommand::handleUCICommand()
-{
-    std::string ret1 = "id name ";
-    std::string ret2 = "id author ";
-    std::string ret3 = "uciok";
-    this->instance->pushToOutputBuffer(ret1.append(ENGINE_NAME));
-    this->instance->pushToOutputBuffer(ret2.append(ENGINE_AUTHOR));
-    this->instance->pushToOutputBufferAndWait(ret3);
-
-    this->isCommandExectuing = false;
-}
+/*
 void NS_UCICommands::UCICommand::handleIsReadyCommand()
 {
     std::string ret = "readyok";
@@ -225,3 +175,4 @@ void NS_UCICommands::UCICommand::handleGoCommand()
     this->isCommandExectuing = false;
 
 }
+*/

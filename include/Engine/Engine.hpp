@@ -5,7 +5,8 @@
 #include <atomic>
 #include <cstdint>
 #include <memory>
-
+#define ENGINE_NAME "FAF Engine"
+#define ENGINE_AUTHOR "Arel Sharon"
 struct GoParams
 {
     uint32_t wtime;
@@ -29,6 +30,8 @@ class Engine{
         void startCalculation(std::shared_ptr<GoParams>);
         void interruptCalculation() { this->stopCalculation = true; }
         void setMoveAsBest(const Ply& move);
+        std::string GetName(){return ENGINE_NAME;};
+        std::string GetAuthor(){return ENGINE_AUTHOR;};
         Engine() : isCalculating(false), stopCalculation(false), game(nullptr) {}
         std::string bestMove;
     private:
