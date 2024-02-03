@@ -1,138 +1,43 @@
 #include "UCIHandeling.hpp"
+#include <string.h>
 
 UCIHandeling::UCIHandeling(std::shared_ptr<Engine> engine)
 {
     this->isRunning = true;
     this->isDebugMode = true;
-    this->commandsCounter = 0;
-    this->currentlyExecutingCommands = std::priority_queue<std::shared_ptr<NS_UCICommands::UCICommand>,std::vector<std::shared_ptr<NS_UCICommands::UCICommand>>,UCICommandCompare>();
-    this->currentlyExecutingCommandsMutex = std::make_unique<std::mutex>();
-    this->commandBuffer = std::vector<std::string>();
-    this->outputBuffer = std::vector<std::string>();
-    this->outputBufferMutex = std::make_unique<std::mutex>();
     this->engine = engine;
-    this->outputBufferCounter = 0;
 }
-bool UCIHandeling::UCICommandCompare::UCICommandCompare::operator()(const std::shared_ptr<NS_UCICommands::UCICommand>& lhs,
-                                                                        const std::shared_ptr<NS_UCICommands::UCICommand>& rhs) const
+
+void UCIHandeling::startCommandHandlerLoop()
 {
-    
-    bool interputing_lhs = NS_UCICommands::UCICommand::isInteruptingCommand(lhs->command);
-    bool interputing_rhs = NS_UCICommands::UCICommand::isInteruptingCommand(rhs->command);
-    if(interputing_lhs && interputing_rhs)
+    while(this->isRunning)
     {
-        return NS_UCICommands::UCIInteruptingCommandsPriority.at(lhs->command) > NS_UCICommands::UCIInteruptingCommandsPriority.at(rhs->command);
+        std::vector<std::string> arglist;
+        std::string line;
+        if (!std::getline(std::cin, line)) {
+            break;
+        }
+        char* token = strtok(const_cast<char*>(line.c_str()), " \t\n");
+        while (token != nullptr) {
+            arglist.push_back(token);
+            token = strtok(nullptr, " \t\n");
+        }
+        if (!arglist.empty()) {
+            if (!getCommandResponse(arglist)) {
+                break;
+            }
+        }
     }
-    else if(interputing_lhs)
-    {
-        return false;
-    }
-    else if(interputing_rhs)
-    {
-        return true;
-    }
-    else
-    {
-        return lhs->getCommandTime()>  rhs->getCommandTime();
-    }
+}
+int UCIHandeling::getCommandResponse(std::vector<std::string>& arglist)
+{
+
+    return 0;
 }
 int UCIHandeling::startUciHandler()
 {
-    std::thread printBufferThread(&UCIHandeling::printBuffer,this);
-    std::atomic<bool> isInputGiven( false);
-
-    std::mutex commandStringMutex;
-    std::string commandsString = "";
-    std::string temp = "";
-    std::thread inputWaiter([&]{
-        while(this->isRunning)
-        {
-            getline(std::cin, temp);
-            if(!temp.empty())
-            {
-                commandStringMutex.lock();
-                commandsString = std::string(temp);
-                temp = "";
-                isInputGiven = true;
-                commandStringMutex.unlock();
-            }
-            while (isInputGiven) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            }
-        }
-        
-    });
-    while (this->isRunning) {
-        commandStringMutex.lock();
-        if(!commandsString.empty())
-        {
-            this->commandBuffer.push_back(commandsString);
-            commandsString = "";
-            isInputGiven = false;
-            commandStringMutex.unlock();
-            continue;
-        }
-        commandStringMutex.unlock();
-
-        /*
-            Parse commands from buffer
-        */
-        for(std::vector<std::string>::iterator currentCommand = this->commandBuffer.begin(); currentCommand  != this->commandBuffer.end();)
-        {
-            auto seperator = currentCommand->find(" ");
-            std::string commandNameStr;
-            std::string commandParams;
-            if(seperator == std::string::npos)
-            {
-                commandNameStr = currentCommand->substr(0);
-                commandParams = "";
-            }
-            else
-            {
-                commandNameStr = currentCommand->substr(0,seperator );
-                commandParams = currentCommand->substr(seperator + 1 );
-            }
-
-            currentCommand = this->commandBuffer.erase(currentCommand);
-            NS_UCICommands::UCICommandName commandName = NS_UCICommands::UCICommandStrings.at(commandNameStr);
-            if(commandName == NS_UCICommands::UCICommandName::Unknown)
-            {
-                continue;
-            }            
-            std::shared_ptr<NS_UCICommands::UCICommand> recievedCommand =
-                std::make_shared<NS_UCICommands::UCICommand>(this,commandName,commandParams,UCIHandeling::getCommandsCounterAndAdvance());
-
-            this->currentlyExecutingCommandsMutex->lock();
-            this->currentlyExecutingCommands.push(recievedCommand);
-            this->currentlyExecutingCommandsMutex->unlock();
-        }
-        /*
-            Remove Finished commands from queue and start highest priority commands
-        */
-        this->currentlyExecutingCommandsMutex->lock();
-        if(this->currentlyExecutingCommands.empty())
-        {
-            this->currentlyExecutingCommandsMutex->unlock();
-            continue;
-        }
-        auto command = this->currentlyExecutingCommands.top();
-        if(command.get()->isCommandStarted)
-        {
-            if(!command.get()->isCommandExectuing)
-            {
-                command.get()->worker->join();
-                this->currentlyExecutingCommands.pop();
-            }
-        }
-        else
-        {
-            command.get()->isCommandStarted = true;
-            command.get()->execute();
-        }
-
-        this->currentlyExecutingCommandsMutex->unlock();
-    }
-    printBufferThread.join();
+    this->isRunning = true;
+    startCommandHandlerLoop();
     return 0;
 }
 
@@ -319,42 +224,4 @@ void NS_UCICommands::UCICommand::handleGoCommand()
     this->instance->pushToOutputBufferAndWait(ret.append(this->instance->engine->bestMove));
     this->isCommandExectuing = false;
 
-}
-void UCIHandeling::pushToOutputBuffer(std::string& output)
-{
-    this->outputBufferMutex->lock();
-    this->outputBuffer.push_back(output);
-    this->outputBufferMutex->unlock();
-}
-void UCIHandeling::pushToOutputBufferAndWait(std::string& output)
-{
-    uint32_t temp;
-    this->outputBufferMutex->lock();
-    uint32_t messageBufferNumber = this->outputBufferCounter;
-    this->outputBuffer.push_back(output);
-    this->outputBufferMutex->unlock();
-    bool isOutputSent = false;
-    while(true)
-    {
-        this->outputBufferMutex->lock();
-        temp = this->outputBufferCounter;
-        this->outputBufferMutex->unlock();
-        if(this->outputBufferCounter>messageBufferNumber)
-        {
-            break;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-}
-void UCIHandeling::printBuffer()
-{
-    while (this->isRunning) {
-        this->outputBufferMutex->lock();
-        for(std::vector<std::string>::iterator it = this->outputBuffer.begin(); it != this->outputBuffer.end(); ++it) {
-            std::cout << *it << std::endl;
-            this->outputBufferCounter++;
-        }
-        this->outputBuffer.clear();
-        this->outputBufferMutex->unlock();
-    }
 }

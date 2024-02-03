@@ -24,10 +24,6 @@ class UCIHandeling
 {
     public:
         int startUciHandler();
-        void bufferCommands(std::string& commandStrings);
-        void pushToOutputBuffer(std::string& output);
-        void pushToOutputBufferAndWait(std::string& output);
-        uint32_t getCommandsCounterAndAdvance(){ return commandsCounter++;}
         UCIHandeling(std::shared_ptr<Engine>);
     public:
         bool isRunning;
@@ -36,20 +32,8 @@ class UCIHandeling
         const std::string FEN_POSITION = "fen";
         std::shared_ptr<Engine> engine;
     private:
-        void printBuffer();
-    private:
-        typedef struct UCICommandCompare
-        {
-            bool operator()(const std::shared_ptr<NS_UCICommands::UCICommand>& lhs, const std::shared_ptr<NS_UCICommands::UCICommand>& rhs) const;
-        }UCICommandCompare;
-        std::priority_queue<std::shared_ptr<NS_UCICommands::UCICommand>,std::vector<std::shared_ptr<NS_UCICommands::UCICommand>>,UCICommandCompare> currentlyExecutingCommands;
-        std::vector<std::string> commandBuffer;
-        std::unique_ptr<std::mutex> currentlyExecutingCommandsMutex;
-        uint32_t commandsCounter;
-        std::vector<std::string> outputBuffer;
-        std::unique_ptr<std::mutex> outputBufferMutex;
-        uint32_t outputBufferCounter;
-
+        void startCommandHandlerLoop();
+        int getCommandResponse(std::vector<std::string>& arglist);
 
 
 };
@@ -97,11 +81,8 @@ namespace NS_UCICommands {
             void execute();
             const UCICommandName command;
             std::string commandParams;
-            std::atomic<bool> isCommandExectuing;
-            std::atomic<bool> isCommandStarted;
-            std::shared_ptr<std::thread> worker;
             UCICommand(UCIHandeling* instance,UCICommandName command,std::string params,uint32_t commandTime) :
-             instance(instance),command(command),commandParams(params),isCommandExectuing(false),isCommandStarted(false),worker(nullptr),commandTime(commandTime){};
+             instance(instance),command(command),commandParams(params),commandTime(commandTime){};
 
             static bool isInteruptingCommand(UCICommandName command);
             uint32_t getCommandTime(){return this->commandTime;}
